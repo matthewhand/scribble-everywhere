@@ -1,0 +1,6 @@
+# ScribbleEverywhere: let the graphical session read the Surface Pen barrel
+# while the overlay is hidden. zwp_tablet_v2 only delivers that button to a
+# focused surface, so the daemon needs the evdev node for the start edge.
+#
+# Must load before 73-seat-late.rules so TAG+="uaccess" is applied.
+ACTION=="add|change", KERNEL=="event*", SUBSYSTEM=="input", ATTRS{name}=="IPTSD Virtual Stylus *", TAG+="uaccess"

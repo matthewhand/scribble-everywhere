@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "matthewh.palimpsest-ink",
+  "name": "ScribbleEverywhere",
+  "version": "1.0.0",
+  "author": "matthewh",
+  "description": "Annotate the focused window and copy it with the ink",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "ScribbleEverywhere",
+    "description": "Toggle annotation. Right-click for colour, paste target, and settings.",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

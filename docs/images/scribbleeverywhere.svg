@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">ScribbleEverywhere: a coral stroke over a window</title>
+  <rect width="256" height="256" rx="58" fill="#0b1f6b"/>
+  <rect x="39" y="45" width="178" height="159" rx="27" fill="#cbd5ff"/>
+  <rect x="39" y="45" width="178" height="42" rx="27" fill="#8e9ff3"/>
+  <path d="M39 66h178v21H39z" fill="#8e9ff3"/>
+  <g fill="#fff"><circle cx="63" cy="66" r="7"/><circle cx="84" cy="66" r="7"/><circle cx="105" cy="66" r="7"/></g>
+  <path d="M27 181c37-39 75-70 104-75 23-4-11 40-3 44 10 5 51-35 101-59" fill="none" stroke="#ff5a6a" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

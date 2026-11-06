@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="480" viewBox="0 0 1200 480" role="img" aria-labelledby="title desc">
+  <title id="title">Draw over a window, then share it</title>
+  <desc id="desc">A conceptual illustration showing a window, an orange annotation, and the annotated image ready to paste.</desc>
+  <rect width="1200" height="480" rx="28" fill="#10192b"/>
+  <circle cx="1055" cy="85" r="160" fill="#182943"/>
+  <path d="M0 360 Q260 280 480 440 L0 480Z" fill="#172942"/>
+  <text x="65" y="76" fill="#f6f8ff" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="700">SCRIBBLEEVERYWHERE</text>
+  <text x="65" y="112" fill="#a8bad0" font-family="Segoe UI,Arial,sans-serif" font-size="18">Your screen is the canvas.</text>
+  <g transform="translate(65 155)">
+    <rect width="295" height="190" rx="15" fill="#f4f7fc"/>
+    <rect width="295" height="31" rx="15" fill="#ced9e9"/><rect y="16" width="295" height="15" fill="#ced9e9"/>
+    <circle cx="20" cy="16" r="4" fill="#8499b4"/><circle cx="34" cy="16" r="4" fill="#8499b4"/><circle cx="48" cy="16" r="4" fill="#8499b4"/>
+    <rect x="22" y="53" width="108" height="11" rx="5" fill="#a1b4cb"/><rect x="22" y="77" width="250" height="8" rx="4" fill="#d7e0ec"/><rect x="22" y="97" width="218" height="8" rx="4" fill="#d7e0ec"/>
+    <rect x="22" y="126" width="117" height="38" rx="7" fill="#d6e5f8"/><rect x="151" y="126" width="122" height="38" rx="7" fill="#e3eaf3"/>
+  </g>
+  <path d="M382 250h31m-10 -10 10 10-10 10" fill="none" stroke="#8fa7c2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <g transform="translate(435 155)">
+    <rect width="295" height="190" rx="15" fill="#f4f7fc"/>
+    <rect width="295" height="31" rx="15" fill="#ced9e9"/><rect y="16" width="295" height="15" fill="#ced9e9"/>
+    <circle cx="20" cy="16" r="4" fill="#8499b4"/><circle cx="34" cy="16" r="4" fill="#8499b4"/><circle cx="48" cy="16" r="4" fill="#8499b4"/>
+    <rect x="22" y="53" width="108" height="11" rx="5" fill="#a1b4cb"/><rect x="22" y="77" width="250" height="8" rx="4" fill="#d7e0ec"/><rect x="22" y="97" width="218" height="8" rx="4" fill="#d7e0ec"/>
+    <rect x="22" y="126" width="117" height="38" rx="7" fill="#d6e5f8"/><rect x="151" y="126" width="122" height="38" rx="7" fill="#e3eaf3"/>
+    <path d="M42 148 C24 111 46 100 88 104 C136 107 153 127 142 151 C133 171 65 178 42 148Z M171 107 C196 89 226 81 254 91 M240 77 L255 91 239 101" fill="none" stroke="#f46643" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <path d="M752 250h31m-10 -10 10 10-10 10" fill="none" stroke="#8fa7c2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <g transform="translate(805 155)">
+    <rect width="295" height="190" rx="15" fill="#f4f7fc"/>
+    <rect width="295" height="31" rx="15" fill="#ced9e9"/><rect y="16" width="295" height="15" fill="#ced9e9"/>
+    <circle cx="20" cy="16" r="4" fill="#8499b4"/><circle cx="34" cy="16" r="4" fill="#8499b4"/><circle cx="48" cy="16" r="4" fill="#8499b4"/>
+    <rect x="22" y="49" width="181" height="11" rx="5" fill="#a1b4cb"/><rect x="22" y="72" width="230" height="8" rx="4" fill="#d7e0ec"/>
+    <rect x="22" y="100" width="159" height="70" rx="8" fill="#d6e5f8"/><path d="M42 142 C42 118 68 113 101 119 C135 123 143 141 130 151 C113 164 47 163 42 142Z" fill="none" stroke="#f46643" stroke-width="6" stroke-linecap="round"/>
+    <rect x="205" y="132" width="63" height="36" rx="9" fill="#315fcb"/><path d="M225 150h23m-8 -8 8 8-8 8" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g fill="#f6f8ff" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="700"><text x="65" y="387">1  Pick a window</text><text x="435" y="387">2  Draw over it</text><text x="805" y="387">3  Copy or paste</text></g>
+  <g fill="#a8bad0" font-family="Segoe UI,Arial,sans-serif" font-size="15"><text x="65" y="414">Keep your context in view.</text><text x="435" y="414">Mark up what matters.</text><text x="805" y="414">Send the image where it helps.</text></g>
+</svg>

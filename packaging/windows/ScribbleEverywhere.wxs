@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Name="ScribbleEverywhere" Language="1033" Version="$(var.ProductVersion)"
+           Manufacturer="ScribbleEverywhere" UpgradeCode="{3C728B29-96A2-45AD-8A0A-5B5523FD3E28}">
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perUser" Platform="x64" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of ScribbleEverywhere is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="LocalAppDataFolder">
+        <Directory Id="ProgramsFolder" Name="Programs">
+          <Directory Id="INSTALLFOLDER" Name="ScribbleEverywhere">
+            <Component Id="InstallFolderCleanup" Guid="{63BCE6F7-1887-4D3E-9CD8-61BE8DC52D04}" Win64="yes">
+              <RemoveFolder Id="RemoveInstallFolder" On="uninstall" />
+              <RemoveFolder Id="RemoveEmptyProgramsParent" Directory="ProgramsFolder" On="uninstall" />
+              <RegistryValue Root="HKCU" Key="Software\ScribbleEverywhere\Installer" Name="Folder" Type="integer" Value="1" KeyPath="yes" />
+            </Component>
+          </Directory>
+        </Directory>
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="AppProgramsFolder" Name="ScribbleEverywhere">
+          <Component Id="StartMenuShortcut" Guid="{BA42D692-7E7F-455A-8318-06C8DE243FC3}" Win64="yes">
+            <Shortcut Id="AppShortcut" Name="ScribbleEverywhere"
+                      Target="[INSTALLFOLDER]ScribbleEverywhere.exe" WorkingDirectory="INSTALLFOLDER" />
+            <RemoveFolder Id="RemoveProgramsFolder" On="uninstall" />
+            <RegistryValue Root="HKCU" Key="Software\ScribbleEverywhere\Installer" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+          </Component>
+        </Directory>
+      </Directory>
+    </Directory>
+    <Feature Id="MainFeature" Title="ScribbleEverywhere" Level="1">
+      <ComponentGroupRef Id="ApplicationFiles" />
+      <ComponentRef Id="StartMenuShortcut" />
+      <ComponentRef Id="InstallFolderCleanup" />
+    </Feature>
+  </Product>
+</Wix>

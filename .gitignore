@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Xcode
+DerivedData/
+build/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcuserstate
+
+# Compiled output
+*.o
+*.dSYM
+*.app
+
+# Runtime output
+*.log
+/work/
+
+# wayland-scanner output (scripts/gen-wayland-protocols.sh)
+Sources/CScribbleEverywhereLinux/Generated/
