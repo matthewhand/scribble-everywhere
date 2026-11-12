@@ -191,7 +191,14 @@ BarWidget {
   }
 
   function refresh() {
-    if (!statusProc.running) statusProc.running = true
+    if (statusTimeout.running) return
+    if (!statusSocket.connected) {
+      statusSocket.connected = true
+      return
+    }
+    statusTimeout.start()
+    statusSocket.write("status\n")
+    statusSocket.flush()
   }
 
   function loadMenu() {
@@ -227,13 +234,35 @@ BarWidget {
 
   Component.onCompleted: refresh()
 
-  Process {
-    id: statusProc
-    command: [root.ctl, "status"]
-    stdout: StdioCollector {
-      waitForEnd: true
-      onStreamFinished: root.applyStatus(text)
+  // The daemon accepts multiple newline-delimited requests per connection.
+  Socket {
+    id: statusSocket
+    path: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/palimpsest-ink.sock"
+    onConnectionStateChanged: {
+      if (connected) {
+        root.refresh()
+      } else {
+        statusTimeout.stop()
+        root.applyStatus("")
+      }
     }
+    onError: {
+      statusTimeout.stop()
+      root.applyStatus("")
+    }
+    parser: SplitParser {
+      onRead: function(line) {
+        if (!statusTimeout.running) return
+        statusTimeout.stop()
+        root.applyStatus(line)
+      }
+    }
+  }
+
+  Timer {
+    id: statusTimeout
+    interval: 5000
+    onTriggered: statusSocket.connected = false
   }
 
   Process {
