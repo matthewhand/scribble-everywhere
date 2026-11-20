@@ -5,9 +5,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-ctl="${HOME}/.local/bin/palimpsestctl"
-if [[ ! -x "$ctl" && -x .build/release/palimpsest-ink ]]; then
-  ctl=".build/release/palimpsest-ink"
+ctl="${HOME}/.local/bin/scribblectl"
+if [[ ! -x "$ctl" && -x .build/release/scribble ]]; then
+  ctl=".build/release/scribble"
 fi
 
 echo "self-test"
@@ -46,11 +46,11 @@ for monitor in layers.values():
     levels = monitor.get("levels", {})
     for entries in levels.values():
         for entry in entries:
-            if entry.get("namespace") == "palimpsest-ink":
+            if entry.get("namespace") == "scribbleeverywhere":
                 print(f"overlay {entry.get('w')}x{entry.get('h')} at {entry.get('x')},{entry.get('y')}")
                 found = True
 if not found:
-    sys.exit("palimpsest-ink layer was not mapped")
+    sys.exit("scribble layer was not mapped")
 PY
 
 echo "draw + copy"

@@ -15,9 +15,9 @@ done
 if [[ "$(uname -s)" != Linux ]]; then echo "Package on Linux." >&2; exit 1; fi
 if [[ -z "$binary" ]]; then
   bash scripts/gen-wayland-protocols.sh
-  swift build -c release --product palimpsest-ink
+  swift build -c release --product scribble
   bin_dir=$(swift build -c release --show-bin-path)
-  binary="$bin_dir/palimpsest-ink"
+  binary="$bin_dir/scribble"
 fi
 [[ -f "$binary" && -x "$binary" ]] || { echo "Executable missing: $binary" >&2; exit 1; }
 mkdir -p "$output"
@@ -25,19 +25,19 @@ output="$(cd "$output" && pwd)"
 scratch=$(mktemp -d "${TMPDIR:-/tmp}/scribbleeverywhere-package.XXXXXXXX")
 trap 'rm -rf -- "$scratch"' EXIT
 bundle="$scratch/ScribbleEverywhere"
-mkdir -p "$bundle/bin" "$bundle/share/omarchy/matthewh.palimpsest-ink"
+mkdir -p "$bundle/bin" "$bundle/share/omarchy/matthewh.scribbleeverywhere"
 install -m 755 "$binary" "$bundle/bin/scribbleeverywhere"
-for alias in scribbleeverywherectl palimpsest-ink palimpsestctl; do
+for alias in scribblectl scribble scribblectl; do
   ln -s scribbleeverywhere "$bundle/bin/$alias"
 done
-cp packaging/omarchy/matthewh.palimpsest-ink/{manifest.json,BarWidget.qml} "$bundle/share/omarchy/matthewh.palimpsest-ink/"
+cp packaging/omarchy/matthewh.scribbleeverywhere/{manifest.json,BarWidget.qml} "$bundle/share/omarchy/matthewh.scribbleeverywhere/"
 cp LICENSE "$bundle/LICENSE"
 cat > "$bundle/README.txt" <<'EOF'
 ScribbleEverywhere for Omarchy / Hyprland (experimental)
 
 This archive does not install itself. Its executable requires compatible Swift
 runtime and system libraries, Wayland, Hyprland, grim, wl-copy and wtype.
-The optional bar widget is in share/omarchy. Existing Palimpsest Ink settings
+The optional bar widget is in share/omarchy. Existing ScribbleEverywhere settings
 and saved annotations remain in their legacy locations.
 The package has not been validated on a clean machine.
 EOF

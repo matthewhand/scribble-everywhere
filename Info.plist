@@ -5,9 +5,9 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleExecutable</key>
-    <string>PalimpsestInk</string>
+    <string>ScribbleEverywhere</string>
     <key>CFBundleIdentifier</key>
-    <string>dev.matthewhand.palimpsest</string>
+    <string>dev.matthewhand.scribbleeverywhere</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>

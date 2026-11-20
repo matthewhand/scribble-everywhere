@@ -1,11 +1,18 @@
 # Validation status
 
-Updated 6 November 2026. This is an experimental source preview.
+Updated 20 November 2026. This is an experimental source preview.
 
 ## Evidence carried into this public snapshot
 
 The following results are recorded in the development validation ledger. They
 are historical evidence, not fresh test runs of the public snapshot:
+
+- **Legacy branding removed (20 Nov 2026):** source, scripts and docs now use
+  ScribbleEverywhere identifiers only. A macOS sweep passed 110 tests, a release
+  build, `check-core.sh` and `check-version.sh`. The macOS score was not raised:
+  the pen shim's GUI LaunchAgent could not be started from an agent session, and
+  stable code signing requires an interactive keychain approval, so live pen and
+  permission-persistence checks remain open.
 
 - **Windows:** 108 native tests and a release GUI build passed. An extracted
   portable build started an isolated validation canvas with a system-only PATH.

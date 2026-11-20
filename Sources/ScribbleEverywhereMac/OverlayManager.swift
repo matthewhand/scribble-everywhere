@@ -1,8 +1,8 @@
 import AppKit
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 @MainActor
-final class OverlayManager: PalimpsestCore.OverlayHost {
+final class OverlayManager: ScribbleEverywhereCore.OverlayHost {
     private var window: OverlayWindow?
     private var view: InkLayerView?
     private var origin: Point = Point(x: 0, y: 0)

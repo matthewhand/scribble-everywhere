@@ -1,6 +1,6 @@
 import Foundation
 import WinSDK
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 /// Windows controller: owns config, overlay, capture and the systray icon.
 @MainActor
@@ -54,7 +54,6 @@ final class WinController {
         if !Self.isolatedValidation { registerHotkey() }
         addTrayIcon()
         clipboard.owner = Self.trayWindow
-        if !Self.isolatedValidation && !WinAutostart.migrateExistingShortcut() { WinLog.log("Legacy startup shortcut migration failed") }
         // The F20 hook handles supported pen-button events. A separately
         // configured PenService launch also signals an existing instance.
         // Tip button: the barrel switch beside the nib. See SurfacePenButton.
@@ -68,7 +67,7 @@ final class WinController {
             WinLog.log("display id=\(display.id) origin=(\(display.frame.minX),\(display.frame.minY)) size=\(display.frame.width)x\(display.frame.height) scale=\(display.scale)")
         }
         WinLog.log("paste windows \(WinWindowTargeting.visibleWindows().count) target \(config.pasteTargetLabel)")
-        WinLog.log("Palimpsest Win started (hotkey \(config.hotkeyDisplay))")
+        WinLog.log("ScribbleEverywhere Win started (hotkey \(config.hotkeyDisplay))")
     }
 
     private func registerHotkey() {
@@ -105,7 +104,7 @@ final class WinController {
     nonisolated(unsafe) private static var trayWindow: HWND = {
         registerTrayClass()
         return CreateWindowExW(
-            0, trayClassName.wide, "PalimpsestTray".wide, 0,
+            0, trayClassName.wide, "ScribbleEverywhereTray".wide, 0,
             0, 0, 0, 0, nil, nil, GetModuleHandleW(nil), nil
         )!
     }()
@@ -113,7 +112,7 @@ final class WinController {
     /// Current owner-draw menu renderer, set when the menu is shown.
     nonisolated(unsafe) private static var currentMenuRenderer: WinTrayMenu?
 
-    nonisolated private static let trayClassName = "PalimpsestTrayWindow"
+    nonisolated private static let trayClassName = "ScribbleEverywhereTrayWindow"
     nonisolated static let WM_APP_TRAY: UINT = UINT(WM_APP) + 1
     /// Posted from the tray right-click so TrackPopupMenu is not nested inside
     /// Explorer's SendMessage.
@@ -846,7 +845,7 @@ enum WinTrayCommand {
 // MARK: - Entry point and message loop
 
 @main
-struct PalimpsestWinApp {
+struct ScribbleEverywhereWinApp {
     static func main() {
         if CommandLine.arguments.contains("/validation-canvas") {
             enablePerMonitorV2()
@@ -862,7 +861,7 @@ struct PalimpsestWinApp {
             // A disposable, opt-in instance can be tested alongside the real
             // tray app without reading or rewriting its settings or hooks.
             let directory = FileManager.default.temporaryDirectory
-                .appendingPathComponent("PalimpsestValidation-\(UUID().uuidString)", isDirectory: true)
+                .appendingPathComponent("ScribbleEverywhereValidation-\(UUID().uuidString)", isDirectory: true)
             validationDirectory = directory
             guard SetEnvironmentVariableW("APPDATA".wide, directory.path.wide),
                   SetEnvironmentVariableW("LOCALAPPDATA".wide, directory.path.wide) else { return }

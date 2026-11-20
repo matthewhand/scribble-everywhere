@@ -2,9 +2,9 @@ import Foundation
 #if canImport(Glibc)
 import Glibc
 #endif
-import PalimpsestCore
+import ScribbleEverywhereCore
 
-/// Linux settings persisted as JSON at ~/.config/palimpsest-ink/config.json,
+/// Linux settings persisted as JSON at ~/.config/scribble/config.json,
 /// mirroring WinConfig/macOS SettingsStore.
 struct LinuxConfig: Codable {
     var paletteColors: [String] = ["#FF3B30FF", "#0072FFFF", "#34C759FF"]
@@ -85,7 +85,7 @@ struct LinuxConfig: Codable {
 
     static func path() -> String {
         let base = env("XDG_CONFIG_HOME") ?? "\(env("HOME") ?? ".")/.config"
-        return "\(base)/palimpsest-ink/config.json"
+        return "\(base)/scribble/config.json"
     }
 
     var palette: Palette {
@@ -207,7 +207,7 @@ extension LinuxColourNames {
 enum LinuxLog {
     static var filePath: String {
         let base = env("XDG_STATE_HOME") ?? "\(env("HOME") ?? ".")/.local/state"
-        return "\(base)/palimpsest-ink/daemon.log"
+        return "\(base)/scribble/daemon.log"
     }
 
     static func log(_ message: String) {

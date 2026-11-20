@@ -1,7 +1,7 @@
 import Foundation
 import WinSDK
 
-/// Tray icon: a coral scribble over a pale window on an ink-blue background.
+/// Tray icon: a dark rounded square with the three default ink colours.
 /// The shell used to load IDI_APPLICATION, which is a blank window glyph.
 enum WinTrayIcon {
     static func make() -> HICON? {
@@ -16,23 +16,12 @@ enum WinTrayIcon {
                     radius: 7, inset: margin
                 )
                 if coverage <= 0 { continue }
-                pixels[y * size + x] = premultiply(b: 0x6B, g: 0x1F, r: 0x0B, a: UInt8(coverage * 255))
+                pixels[y * size + x] = premultiply(b: 0x22, g: 0x1E, r: 0x1E, a: UInt8(coverage * 255))
             }
         }
-        for y in 7...24 {
-            for x in 5...26 {
-                pixels[y * size + x] = premultiply(b: 0xFF, g: 0xD5, r: 0xCB, a: 255)
-            }
-        }
-        // Sample connected points so the mark remains recognizable at tray size.
-        let points: [(Double, Double)] = [(3, 24), (9, 18), (16, 13), (18, 13), (15, 20), (20, 16), (29, 10)]
-        for (start, end) in zip(points, points.dropFirst()) {
-            for step in 0...12 {
-                let t = Double(step) / 12
-                stamp(&pixels, size: size, cx: start.0 + (end.0 - start.0) * t,
-                      cy: start.1 + (end.1 - start.1) * t, radius: 2.2, b: 0x6A, g: 0x5A, r: 0xFF)
-            }
-        }
+        stamp(&pixels, size: size, cx: 11, cy: 17, radius: 6.2, b: 48, g: 59, r: 255)
+        stamp(&pixels, size: size, cx: 20, cy: 12, radius: 6.2, b: 255, g: 122, r: 0)
+        stamp(&pixels, size: size, cx: 21, cy: 21, radius: 5.4, b: 89, g: 199, r: 52)
 
         guard let color = dib(pixels, size: size), let mask = CreateBitmap(Int32(size), Int32(size), 1, 1, nil) else {
             WinLog.log("tray icon bitmap failed \(GetLastError())")

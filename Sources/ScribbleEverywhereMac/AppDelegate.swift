@@ -1,5 +1,5 @@
 import AppKit
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor var statusMenu: StatusMenuBox?

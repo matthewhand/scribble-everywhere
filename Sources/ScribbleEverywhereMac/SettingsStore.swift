@@ -1,7 +1,7 @@
 import Foundation
 import Combine
 import ServiceManagement
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 enum FloatingPalettePosition: String, CaseIterable {
     case none
@@ -151,12 +151,13 @@ final class SettingsStore: ObservableObject {
         pasteOverrideAppID = defaults.string(forKey: Key.pasteOverrideApp)
         pasteOverrideAppName = defaults.string(forKey: Key.pasteOverrideAppName)
         let status = loginStatus()
+        let legacyLaunchAtStartup = defaults.bool(forKey: Key.launchOnStartup)
         launchOnStartup = status == .enabled || status == .requiresApproval
         action = DeliveryAction(rawValue: defaults.string(forKey: Key.action) ?? "") ?? .copyAndPaste
         saveAnnotations = defaults.object(forKey: Key.saveAnnotations) == nil || defaults.bool(forKey: Key.saveAnnotations)
         floatingPalettePosition = FloatingPalettePosition(rawValue: defaults.string(forKey: Key.floatingPalettePosition) ?? "") ?? .topRight
         let defaultFolder = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("PalimpsestInk", isDirectory: true)
+            .appendingPathComponent("ScribbleEverywhere", isDirectory: true)
             .appendingPathComponent("Annotations", isDirectory: true)
         annotationFolder = URL(fileURLWithPath: defaults.string(forKey: Key.annotationFolder) ?? defaultFolder.path)
         paperTone = defaults.object(forKey: Key.paperTone) == nil || defaults.bool(forKey: Key.paperTone)
@@ -166,16 +167,23 @@ final class SettingsStore: ObservableObject {
             .compactMap(RGBA.init(hex:)) ?? Palette.defaultColors
         palette = Palette(colors: colors, index: defaults.integer(forKey: Key.paletteIndex))
         colourNames = (defaults.dictionary(forKey: Key.colourNames) as? [String: String]) ?? [:]
+        if legacyLaunchAtStartup && !launchOnStartup {
+            applyLaunchOnStartup(true)
+        }
         startupMessage = status == .requiresApproval
             ? "Allow ScribbleEverywhere in System Settings → General → Login Items." : nil
     }
 
     private func updateLaunchOnStartup() {
+        applyLaunchOnStartup(launchOnStartup)
+    }
+
+    private func applyLaunchOnStartup(_ enabled: Bool) {
         guard !changingLoginItem else { return }
         changingLoginItem = true
         defer { changingLoginItem = false }
         do {
-            try updateLoginItem(launchOnStartup)
+            try updateLoginItem(enabled)
             startupMessage = loginStatus() == .requiresApproval
                 ? "Allow ScribbleEverywhere in System Settings → General → Login Items." : nil
         } catch {

@@ -2,7 +2,7 @@
 # Archive a locally built app; does not sign for distribution or notarize it.
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
-app="$HOME/Library/Application Support/PalimpsestInk/PalimpsestInk.app"
+app="$HOME/Library/Application Support/ScribbleEverywhere/ScribbleEverywhere.app"
 output="$root/.build/artifacts"
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -12,7 +12,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 if [[ "$(uname -s)" != Darwin ]]; then echo "Package on macOS." >&2; exit 1; fi
-[[ -f "$app/Contents/Info.plist" && -x "$app/Contents/MacOS/PalimpsestInk" ]] || {
+[[ -f "$app/Contents/Info.plist" && -x "$app/Contents/MacOS/ScribbleEverywhere" ]] || {
   echo "App bundle missing or incomplete; run scripts/make-app.sh first: $app" >&2; exit 1;
 }
 codesign --verify --strict "$app"

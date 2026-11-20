@@ -1,6 +1,6 @@
 import AppKit
 import Combine
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 /// Owns the status bar item and builds its menu with AppKit directly so the
 /// content (labels, checkmarks, window list) is rebuilt fresh every time the

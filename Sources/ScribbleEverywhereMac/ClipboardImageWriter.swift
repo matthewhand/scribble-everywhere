@@ -1,7 +1,7 @@
 import AppKit
-import PalimpsestCore
+import ScribbleEverywhereCore
 
-final class ClipboardImageWriter: PalimpsestCore.ClipboardWriter {
+final class ClipboardImageWriter: ScribbleEverywhereCore.ClipboardWriter {
     private let pasteboard: NSPasteboard
 
     init(pasteboard: NSPasteboard = .general) { self.pasteboard = pasteboard }

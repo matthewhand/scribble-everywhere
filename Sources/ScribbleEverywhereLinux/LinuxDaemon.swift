@@ -1,9 +1,9 @@
 import Foundation
 import Glibc
-import PalimpsestCore
-import CPalimpsestLinux
+import ScribbleEverywhereCore
+import CScribbleEverywhereLinux
 
-private func waylandEvent(_ event: UnsafePointer<palimpsest_event>?, _ userdata: UnsafeMutableRawPointer?) {
+private func waylandEvent(_ event: UnsafePointer<scribble_event>?, _ userdata: UnsafeMutableRawPointer?) {
     guard let event, let userdata else { return }
     Unmanaged<LinuxDaemon>.fromOpaque(userdata).takeUnretainedValue().handle(event.pointee)
 }
@@ -73,7 +73,7 @@ final class LinuxDaemon {
 
     static var socketPath: String {
         let dir = env("XDG_RUNTIME_DIR") ?? "/tmp"
-        return "\(dir)/palimpsest-ink.sock"
+        return "\(dir)/scribble.sock"
     }
 
     var socketPath: String { Self.socketPath }
@@ -83,7 +83,7 @@ final class LinuxDaemon {
     /// Returns false when another daemon holds the lock or Wayland is unavailable.
     func connect() -> Bool {
         guard takeLock() else {
-            LinuxLog.log("Another palimpsest-ink daemon is already running")
+            LinuxLog.log("Another scribble daemon is already running")
             return false
         }
         signal(SIGINT, linuxSignalHandler)
@@ -94,7 +94,7 @@ final class LinuxDaemon {
         var error = [CChar](repeating: 0, count: 512)
         let userdata = Unmanaged.passUnretained(self).toOpaque()
         let connected = error.withUnsafeMutableBufferPointer { buffer -> Int32 in
-            palimpsest_wl_connect(&raw, waylandEvent, userdata, buffer.baseAddress, buffer.count)
+            scribble_wl_connect(&raw, waylandEvent, userdata, buffer.baseAddress, buffer.count)
         }
         guard connected == 0, let raw else {
             let message = String(cString: error)
@@ -125,7 +125,7 @@ final class LinuxDaemon {
             let timeout: Int32 = (dirty || !pending.isEmpty) ? 16 : 200
             let rc = fds.withUnsafeBufferPointer { fdPointer -> Int32 in
                 ready.withUnsafeMutableBufferPointer { readyPointer in
-                    palimpsest_wl_poll(
+                    scribble_wl_poll(
                         session, fdPointer.baseAddress, Int32(fds.count),
                         readyPointer.baseAddress, timeout
                     )
@@ -157,8 +157,8 @@ final class LinuxDaemon {
 
     private func shutdown() {
         if let session {
-            palimpsest_wl_hide(session)
-            palimpsest_wl_destroy(session)
+            scribble_wl_hide(session)
+            scribble_wl_destroy(session)
             self.session = nil
         }
         for client in clients { close(client.fd) }
@@ -177,7 +177,7 @@ final class LinuxDaemon {
 
     private func takeLock() -> Bool {
         let path = ((socketPath as NSString).deletingLastPathComponent as NSString)
-            .appendingPathComponent("palimpsest-ink.lock")
+            .appendingPathComponent("scribble.lock")
         let fd = open(path, O_CREAT | O_RDWR | O_CLOEXEC, mode_t(0o600))
         guard fd >= 0 else {
             LinuxLog.log("Could not open \(path)")
@@ -193,21 +193,21 @@ final class LinuxDaemon {
 
     // MARK: Input
 
-    func handle(_ event: palimpsest_event) {
+    func handle(_ event: scribble_event) {
         switch Int(event.kind) {
-        case PALIMPSEST_EVENT_POINTER_ENTER, PALIMPSEST_EVENT_POINTER_MOTION:
+        case SCRIBBLE_EVENT_POINTER_ENTER, SCRIBBLE_EVENT_POINTER_MOTION:
             guard activeTouch == nil, !penProximity else { return }
             lastPoint = globalPoint(outputID: event.output_id, x: event.x, y: event.y)
             if pointerDown && !penProximity && !paletteHold {
                 extend(at: lastPoint, pressure: 0.5, isTablet: false)
             }
-        case PALIMPSEST_EVENT_POINTER_LEAVE:
+        case SCRIBBLE_EVENT_POINTER_LEAVE:
             if pointerDown && !penProximity {
                 pointerDown = false
                 paletteHold = false
                 end(at: lastPoint, pressure: 0.5, isTablet: false)
             }
-        case PALIMPSEST_EVENT_POINTER_BUTTON:
+        case SCRIBBLE_EVENT_POINTER_BUTTON:
             guard activeTouch == nil else { return }
             lastPoint = globalPoint(outputID: event.output_id, x: event.x, y: event.y)
             if event.pressed == 1 {
@@ -234,7 +234,7 @@ final class LinuxDaemon {
                 pointerDown = false
                 end(at: lastPoint, pressure: 0.5, isTablet: false)
             }
-        case PALIMPSEST_EVENT_TOUCH_DOWN:
+        case SCRIBBLE_EVENT_TOUCH_DOWN:
             guard !penProximity, activeTouch == nil, !pointerDown, !strokeOpen else { return }
             activeTouch = event.touch_id
             activeTouchOutput = event.output_id
@@ -244,13 +244,13 @@ final class LinuxDaemon {
                 return
             }
             begin(at: lastPoint, pressure: 0.5, isTablet: false)
-        case PALIMPSEST_EVENT_TOUCH_MOTION:
+        case SCRIBBLE_EVENT_TOUCH_MOTION:
             guard event.touch_id == activeTouch else { return }
             lastPoint = globalPoint(outputID: activeTouchOutput, x: event.x, y: event.y)
             if !paletteHold {
                 extend(at: lastPoint, pressure: 0.5, isTablet: false)
             }
-        case PALIMPSEST_EVENT_TOUCH_UP:
+        case SCRIBBLE_EVENT_TOUCH_UP:
             guard event.touch_id == activeTouch else { return }
             activeTouch = nil
             if paletteHold {
@@ -258,7 +258,7 @@ final class LinuxDaemon {
                 return
             }
             end(at: lastPoint, pressure: 0.5, isTablet: false)
-        case PALIMPSEST_EVENT_TOUCH_CANCEL:
+        case SCRIBBLE_EVENT_TOUCH_CANCEL:
             guard activeTouch != nil else { return }
             activeTouch = nil
             paletteHold = false
@@ -267,7 +267,7 @@ final class LinuxDaemon {
                 strokeOpen = false
                 dirty = true
             }
-        case PALIMPSEST_EVENT_TABLET_PROXIMITY:
+        case SCRIBBLE_EVENT_TABLET_PROXIMITY:
             penProximity = event.pressed == 1
             if !penProximity && strokeOpen && strokeIsTablet {
                 tipDown = false
@@ -288,15 +288,15 @@ final class LinuxDaemon {
                     }
                 }
             }
-        case PALIMPSEST_EVENT_TABLET_MOTION:
+        case SCRIBBLE_EVENT_TABLET_MOTION:
             lastPoint = globalPoint(outputID: event.output_id, x: event.x, y: event.y)
-        case PALIMPSEST_EVENT_TABLET_PRESSURE:
+        case SCRIBBLE_EVENT_TABLET_PRESSURE:
             tabletPressure = event.pressure
-        case PALIMPSEST_EVENT_TABLET_DOWN:
+        case SCRIBBLE_EVENT_TABLET_DOWN:
             tipDown = true
-        case PALIMPSEST_EVENT_TABLET_UP:
+        case SCRIBBLE_EVENT_TABLET_UP:
             tipDown = false
-        case PALIMPSEST_EVENT_TABLET_FRAME:
+        case SCRIBBLE_EVENT_TABLET_FRAME:
             guard penProximity || tipDown || paletteHold || (strokeOpen && strokeIsTablet) else { return }
             if event.output_id >= 0 {
                 lastPoint = globalPoint(outputID: event.output_id, x: event.x, y: event.y)
@@ -323,7 +323,7 @@ final class LinuxDaemon {
             } else if strokeOpen && strokeIsTablet {
                 end(at: lastPoint, pressure: lastContactPressure, isTablet: true)
             }
-        case PALIMPSEST_EVENT_TABLET_BUTTON:
+        case SCRIBBLE_EVENT_TABLET_BUTTON:
             guard event.pressed == 1 else { return }
             // BTN_STYLUS / BTN_STYLUS2, or whatever eraser_button_override emits.
             LinuxLog.log(String(format: "tablet button code=0x%X pressed=%d", event.code, event.pressed))
@@ -332,11 +332,11 @@ final class LinuxDaemon {
             } else if event.code == 0x14B || event.code == 0x110 || event.code == 0x111 {
                 pending.append(.toggle)
             }
-        case PALIMPSEST_EVENT_KEY:
+        case SCRIBBLE_EVENT_KEY:
             handleKey(event)
-        case PALIMPSEST_EVENT_KEYBOARD_FOCUS_RESET:
+        case SCRIBBLE_EVENT_KEYBOARD_FOCUS_RESET:
             ctrlKeys.removeAll()
-        case PALIMPSEST_EVENT_CLOSED:
+        case SCRIBBLE_EVENT_CLOSED:
             LinuxLog.log("Compositor closed the overlay")
             finishInputSession()
         default:
@@ -344,7 +344,7 @@ final class LinuxDaemon {
         }
     }
 
-    private func handleKey(_ event: palimpsest_event) {
+    private func handleKey(_ event: scribble_event) {
         let key = event.code
         if key == 29 || key == 97 {
             if event.pressed == 1 { ctrlKeys.insert(key) }
@@ -439,13 +439,13 @@ final class LinuxDaemon {
     func startAnnotating() {
         previousAddress = HyprlandWindow.active()?.address
         let insets = BarInsets.current()
-        palimpsest_wl_set_margins(session, insets.top, insets.right, insets.bottom, insets.left)
+        scribble_wl_set_margins(session, insets.top, insets.right, insets.bottom, insets.left)
         // Mapping can synchronously deliver keyboard-enter with held keys.
         // Reset the old input session before those events, not after them.
         beginInputSession()
-        guard palimpsest_wl_show(session) == 0 else {
+        guard scribble_wl_show(session) == 0 else {
             finishInputSession()
-            palimpsest_wl_hide(session)
+            scribble_wl_hide(session)
             LinuxLog.log("Could not map the overlay")
             HUD.show("Could not show the overlay")
             return
@@ -461,8 +461,8 @@ final class LinuxDaemon {
 
     func stopAnnotating() {
         finishInputSession()
-        palimpsest_wl_hide(session)
-        _ = palimpsest_wl_roundtrip(session)
+        scribble_wl_hide(session)
+        _ = scribble_wl_roundtrip(session)
     }
 
     /// Input state boundaries are independent of mapping a compositor surface.
@@ -554,8 +554,8 @@ final class LinuxDaemon {
         }
 
         let restore = annotating
-        palimpsest_wl_hide(session)
-        _ = palimpsest_wl_roundtrip(session)
+        scribble_wl_hide(session)
+        _ = scribble_wl_roundtrip(session)
         usleep(40_000)
         annotating = false
 
@@ -649,7 +649,7 @@ final class LinuxDaemon {
 
     private func restoreOverlay(_ restore: Bool) {
         guard restore else { return }
-        if palimpsest_wl_show(session) == 0 {
+        if scribble_wl_show(session) == 0 {
             annotating = true
             dirty = true
         }
@@ -696,13 +696,13 @@ final class LinuxDaemon {
 
     // MARK: Drawing
 
-    private func outputInfos() -> [palimpsest_output_info] {
+    private func outputInfos() -> [scribble_output_info] {
         guard let session else { return [] }
-        let count = palimpsest_wl_output_count(session)
-        var infos: [palimpsest_output_info] = []
+        let count = scribble_wl_output_count(session)
+        var infos: [scribble_output_info] = []
         for index in 0..<count {
-            var info = palimpsest_output_info()
-            if palimpsest_wl_output_info(session, index, &info) == 0 {
+            var info = scribble_output_info()
+            if scribble_wl_output_info(session, index, &info) == 0 {
                 infos.append(info)
             }
         }
@@ -714,7 +714,7 @@ final class LinuxDaemon {
         for info in outputInfos() where info.buffer_width > 0 && info.buffer_height > 0 {
             let image = render(info)
             let status = image.withRawBytes { pointer -> Int32 in
-                palimpsest_wl_present(
+                scribble_wl_present(
                     session, info.id,
                     pointer.assumingMemoryBound(to: UInt8.self),
                     Int32(image.width), Int32(image.height), Int32(image.width * 4)
@@ -728,7 +728,7 @@ final class LinuxDaemon {
         }
     }
 
-    private func render(_ info: palimpsest_output_info) -> ImageBuffer {
+    private func render(_ info: scribble_output_info) -> ImageBuffer {
         let width = Int(info.buffer_width)
         let height = Int(info.buffer_height)
         let background = ImageBuffer(

@@ -46,7 +46,7 @@ The MSI has a stable upgrade identity, installs under the current user's local
 app data and creates a Start menu shortcut. It does not create an autostart
 shortcut or remove saved annotations and settings. Installation, upgrade and
 uninstall have **not yet been validated**; test on a clean machine and an
-existing Palimpsest Ink installation before release.
+existing ScribbleEverywhere installation before release.
 
 On 6 November 2026 an MSI linked with WiX validation enabled. Database checks
 confirmed the product name, version, upgrade identity, 20 packaged files and

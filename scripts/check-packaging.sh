@@ -14,13 +14,13 @@ mkdir "$scratch/extracted"
 tar -xzf "$scratch/output/$archive" -C "$scratch/extracted"
 bundle="$scratch/extracted/ScribbleEverywhere"
 cmp "$fixture" "$bundle/bin/scribbleeverywhere"
-for alias in scribbleeverywherectl palimpsest-ink palimpsestctl; do
+for alias in scribblectl scribble scribblectl; do
   [[ -L "$bundle/bin/$alias" && "$(readlink "$bundle/bin/$alias")" == scribbleeverywhere ]]
   [[ "$("$bundle/bin/$alias")" == fixture-ok ]]
 done
 cmp "$root/LICENSE" "$bundle/LICENSE"
 for file in manifest.json BarWidget.qml; do
-  cmp "$root/packaging/omarchy/matthewh.palimpsest-ink/$file" "$bundle/share/omarchy/matthewh.palimpsest-ink/$file"
+  cmp "$root/packaging/omarchy/matthewh.scribbleeverywhere/$file" "$bundle/share/omarchy/matthewh.scribbleeverywhere/$file"
 done
 chmod -x "$fixture"
 if bash "$root/scripts/package-linux.sh" --binary "$fixture" --output-dir "$scratch/invalid"; then

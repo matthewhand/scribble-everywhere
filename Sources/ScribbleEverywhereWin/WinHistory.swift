@@ -1,6 +1,6 @@
 import Foundation
 import WinSDK
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 /// Saves delivered annotations as PNGs and lists recent files.
 @MainActor
@@ -19,7 +19,7 @@ final class WinHistory {
 
     nonisolated static func defaultFolder() -> String {
         let base = env("APPDATA") ?? "."
-        return "\(base)\\PalimpsestInk\\Annotations"
+        return "\(base)\\ScribbleEverywhere\\Annotations"
     }
 
     private func ensureFolder() {
@@ -80,20 +80,17 @@ private extension URL {
 /// Launch-at-login via the Startup folder.
 @MainActor
 final class WinAutostart {
-    static func migrateExistingShortcut() -> Bool {
-        guard isEnabled() else { return true }
-        return runPowershell(migrationScript(shortcutPath: shortcutPath()))
-    }
-
     /// Repair only this app's legacy empty-argument link. Preserve custom
     /// arguments, target paths and links belonging to another executable.
     static func migrationScript(shortcutPath: String) -> String {
         let path = "'" + shortcutPath.replacingOccurrences(of: "'", with: "''") + "'"
         return """
         $ErrorActionPreference = 'Stop'
+        $known = @('ScribbleEverywhereWin.exe', 'ScribbleEverywhere.exe')
         if (Test-Path -LiteralPath \(path)) {
             $s = (New-Object -ComObject WScript.Shell).CreateShortcut(\(path))
-            if ([IO.Path]::GetFileName($s.TargetPath) -in @('PalimpsestWin.exe', 'ScribbleEverywhere.exe') -and [string]::IsNullOrWhiteSpace($s.Arguments)) {
+            $name = [IO.Path]::GetFileName($s.TargetPath)
+            if ($known -contains $name -and [string]::IsNullOrWhiteSpace($s.Arguments)) {
                 $s.Arguments = '/startup'
                 $s.Save()
             }
@@ -145,7 +142,7 @@ final class WinAutostart {
 
     private static func shortcutPath() -> String {
         let base = env("APPDATA") ?? "."
-        return "\(base)\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\Palimpsest Ink.lnk"
+        return "\(base)\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\ScribbleEverywhere.lnk"
     }
 
     private static func exePath() -> String {
@@ -215,7 +212,7 @@ enum WinDiagnostics {
 
     static func folderWriteStatus(_ folder: String) -> String {
         // Avoid reusing a fixed filename such as a prior .write-test.
-        let testURL = URL(fileURLWithPath: folder).appendingPathComponent(".palimpsest-write-test-\(UUID().uuidString)")
+        let testURL = URL(fileURLWithPath: folder).appendingPathComponent(".scribble-write-test-\(UUID().uuidString)")
         do {
             try "test".write(to: testURL, atomically: true, encoding: .utf8)
             try FileManager.default.removeItem(at: testURL)

@@ -5,9 +5,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-APP="$HOME/Library/Application Support/PalimpsestInk/PalimpsestInk.app"
+APP="$HOME/Library/Application Support/ScribbleEverywhere/ScribbleEverywhere.app"
 
-if [ "${1:-}" = "--build" ] || [ ! -x "$APP/Contents/MacOS/PalimpsestInk" ]; then
+if [ "${1:-}" = "--build" ] || [ ! -x "$APP/Contents/MacOS/ScribbleEverywhere" ]; then
     "$ROOT/scripts/make-app.sh" release
 else
     echo "==> Reusing existing build (use ./run.sh --build to rebuild)"

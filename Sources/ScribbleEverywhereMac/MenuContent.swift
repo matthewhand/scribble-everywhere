@@ -1,5 +1,5 @@
 import SwiftUI
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 struct MenuContent: View {
     @ObservedObject var controller: AppController

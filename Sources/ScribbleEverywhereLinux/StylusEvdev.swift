@@ -51,7 +51,7 @@ final class StylusEvdevMonitor {
             loggedDenied = true
             LinuxLog.log(
                 "Barrel start needs read access to \(denied.joined(separator: ", ")). "
-                    + "Install packaging/linux/69-palimpsest-ink-stylus.rules "
+                    + "Install packaging/linux/69-scribble-stylus.rules "
                     + "(scripts/install-linux-stylus-access.sh)."
             )
         }

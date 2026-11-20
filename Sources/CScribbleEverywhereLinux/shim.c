@@ -1,10 +1,10 @@
-#include "CPalimpsestLinux.h"
+#include "CScribbleEverywhereLinux.h"
 #include <png.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-int palimpsest_write_png_rgba(const char *path, int width, int height, int stride,
+int scribble_write_png_rgba(const char *path, int width, int height, int stride,
                               const uint8_t *rgba) {
     FILE *file = fopen(path, "wb");
     if (!file) {

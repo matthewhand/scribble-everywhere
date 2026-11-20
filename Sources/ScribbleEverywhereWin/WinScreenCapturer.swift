@@ -1,12 +1,12 @@
 import Foundation
 import WinSDK
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 /// Captures a screen rect with GDI (BitBlt from the screen DC), excluding our
 /// own windows the same way the macOS capturer does - by hiding them briefly.
 /// The ink is composited from the stroke model afterwards, not read from the
 /// screen, so the preview ink is never baked in twice.
-struct WinScreenCapturer: PalimpsestCore.ScreenCapturer {
+struct WinScreenCapturer: ScribbleEverywhereCore.ScreenCapturer {
     struct CapturedImage {
         let image: ImageBuffer
         /// Physical screen-pixel origin of the captured image.

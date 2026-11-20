@@ -1,6 +1,6 @@
 import Foundation
 import WinSDK
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 /// Clipboard (registered PNG format plus CF_DIBV5) and paste (SendInput Ctrl+V).
 /// PNG bytes come from `ImageBuffer.pngData()` in this file. Core has no PNG

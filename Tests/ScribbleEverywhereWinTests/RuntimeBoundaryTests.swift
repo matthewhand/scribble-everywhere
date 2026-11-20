@@ -1,8 +1,8 @@
 import Foundation
 import Testing
 import WinSDK
-import PalimpsestCore
-@testable import PalimpsestWin
+import ScribbleEverywhereCore
+@testable import ScribbleEverywhereWin
 
 @Suite("Windows runtime boundaries", .serialized)
 @MainActor
@@ -77,7 +77,7 @@ struct RuntimeBoundaryTests {
         defer { try? FileManager.default.removeItem(at: scratch) }
         func path(_ url: URL) -> String { url.path.replacingOccurrences(of: "/", with: "\\") }
         func quote(_ text: String) -> String { "'" + text.replacingOccurrences(of: "'", with: "''") + "'" }
-        let cases = [("PalimpsestWin.exe", "", "/startup"), ("ScribbleEverywhere.exe", "", "/startup"), ("PalimpsestWin.exe", "/custom", "/custom"), ("Other.exe", "", "")]
+        let cases = [("ScribbleEverywhereWin.exe", "", "/startup"), ("ScribbleEverywhereWin.exe", "/custom", "/custom"), ("Other.exe", "", "")]
         for (index, entry) in cases.enumerated() {
             let shortcut = path(scratch.appendingPathComponent("case\(index).lnk"))
             let executable = path(scratch.appendingPathComponent(entry.0))

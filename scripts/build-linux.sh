@@ -4,7 +4,7 @@
 # Needs: a Swift toolchain, wayland-scanner, libwayland (client + cursor),
 # libpng, grim, wl-clipboard, wtype, and hyprctl on a Hyprland session.
 #
-#   ./scripts/build-linux.sh            build and install ~/.local/bin/scribbleeverywhere
+#   ./scripts/build-linux.sh            build and install ~/.local/bin/scribble
 #   ./scripts/build-linux.sh --applet   also install the optional Omarchy bar widget
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -40,25 +40,22 @@ if ! command -v swift >/dev/null; then
 fi
 
 ./scripts/gen-wayland-protocols.sh
-swift build -c release --product palimpsest-ink
+swift build -c release --product scribble
 
-install -Dm755 ".build/release/palimpsest-ink" "${HOME}/.local/bin/scribbleeverywhere"
-ln -sfn "${HOME}/.local/bin/scribbleeverywhere" "${HOME}/.local/bin/scribbleeverywherectl"
-# Existing Hyprland binds and applet installations keep working after upgrade.
-ln -sfn "${HOME}/.local/bin/scribbleeverywhere" "${HOME}/.local/bin/palimpsest-ink"
-ln -sfn "${HOME}/.local/bin/scribbleeverywhere" "${HOME}/.local/bin/palimpsestctl"
+install -Dm755 ".build/release/scribble" "${HOME}/.local/bin/scribble"
+ln -sfn "${HOME}/.local/bin/scribble" "${HOME}/.local/bin/scribblectl"
 
-echo "Installed ${HOME}/.local/bin/scribbleeverywhere"
-echo "Control client: scribbleeverywherectl (legacy palimpsestctl remains available)"
+echo "Installed ${HOME}/.local/bin/scribble"
+echo "Control client: scribblectl (starts the daemon on first use)"
 echo
 echo "Hyprland bind (one global chord; Esc / Ctrl+Z work while annotating):"
-echo '  o.bind("SUPER + ALT + D", "ScribbleEverywhere", "scribbleeverywherectl toggle")'
+echo '  o.bind("SUPER + ALT + D", "ScribbleEverywhere", "scribblectl toggle")'
 echo
 echo "Surface Pen barrel start (once, needs root) so the button works with the overlay hidden:"
 echo '  ./scripts/install-linux-stylus-access.sh'
 echo
 echo "Autostart, if you want the daemon before the first click:"
-echo '  o.exec_on_start(os.getenv("HOME") .. "/.local/bin/scribbleeverywhere daemon")'
+echo '  o.exec_on_start(os.getenv("HOME") .. "/.local/bin/scribble daemon")'
 
 if [[ "$applet" == 1 ]]; then
   ./scripts/install-omarchy-applet.sh

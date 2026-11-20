@@ -4,8 +4,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-rule_src="packaging/linux/69-palimpsest-ink-stylus.rules"
-rule_dst="/etc/udev/rules.d/69-palimpsest-ink-stylus.rules"
+rule_src="packaging/linux/69-scribble-stylus.rules"
+rule_dst="/etc/udev/rules.d/69-scribble-stylus.rules"
 
 if [[ ! -f "$rule_src" ]]; then
   echo "missing $rule_src" >&2
@@ -49,4 +49,4 @@ if [[ -n "$target_user" && "$target_user" != "root" ]]; then
 fi
 
 echo "Installed $rule_dst"
-echo "Restart palimpsest-ink after this: palimpsestctl quit && palimpsest-ink daemon"
+echo "Restart scribble after this: scribblectl quit && scribble daemon"

@@ -1,9 +1,9 @@
 import Foundation
 import WinSDK
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 /// File logging for the Windows shell (no unified logging there).
-/// Written to %LOCALAPPDATA%\PalimpsestInk\log.txt.
+/// Written to %LOCALAPPDATA%\ScribbleEverywhere\log.txt.
 enum WinLog {
     static func log(_ message: String) {
         let dir = logDirectory()
@@ -23,12 +23,12 @@ enum WinLog {
 
     static func logDirectory() -> String {
         let base = env("LOCALAPPDATA") ?? env("APPDATA") ?? "."
-        return "\(base)\\PalimpsestInk"
+        return "\(base)\\ScribbleEverywhere"
     }
 
     static func appDataDirectory() -> String {
         let base = env("APPDATA") ?? env("LOCALAPPDATA") ?? "."
-        return "\(base)\\PalimpsestInk"
+        return "\(base)\\ScribbleEverywhere"
     }
 
     private static func env(_ name: String) -> String? {

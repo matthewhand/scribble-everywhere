@@ -1,4 +1,4 @@
-#include "CPalimpsestLinux.h"
+#include "CScribbleEverywhereLinux.h"
 
 #include <errno.h>
 #include <poll.h>
@@ -27,7 +27,7 @@ struct shm_buffer {
 };
 
 struct output {
-    struct palimpsest_wl *wl;
+    struct scribble_wl *wl;
     uint32_t registry_name;
     int id;
     int alive;
@@ -45,7 +45,7 @@ struct output {
     struct shm_buffer buffers[2];
 };
 
-struct palimpsest_wl {
+struct scribble_wl {
     struct wl_display *display;
     struct wl_registry *registry;
     struct wl_compositor *compositor;
@@ -80,11 +80,11 @@ struct palimpsest_wl {
     double tablet_y;
     double tablet_pressure;
 
-    palimpsest_event_fn on_event;
+    scribble_event_fn on_event;
     void *userdata;
 };
 
-static void emit(struct palimpsest_wl *wl, struct palimpsest_event event) {
+static void emit(struct scribble_wl *wl, struct scribble_event event) {
     if (wl->on_event) {
         wl->on_event(&event, wl->userdata);
     }
@@ -94,7 +94,7 @@ static uint32_t cap_version(uint32_t offered, uint32_t wanted) {
     return offered < wanted ? offered : wanted;
 }
 
-static struct output *output_by_id(struct palimpsest_wl *wl, int32_t id) {
+static struct output *output_by_id(struct scribble_wl *wl, int32_t id) {
     for (int i = 0; i < wl->output_count; i++) {
         if (wl->outputs[i].alive && wl->outputs[i].id == id) {
             return &wl->outputs[i];
@@ -103,7 +103,7 @@ static struct output *output_by_id(struct palimpsest_wl *wl, int32_t id) {
     return NULL;
 }
 
-static struct output *output_for_surface(struct palimpsest_wl *wl, struct wl_surface *surface) {
+static struct output *output_for_surface(struct scribble_wl *wl, struct wl_surface *surface) {
     if (!surface) {
         return NULL;
     }
@@ -135,10 +135,10 @@ static void buffer_destroy(struct shm_buffer *buf) {
     memset(buf, 0, sizeof(*buf));
 }
 
-static int buffer_create(struct palimpsest_wl *wl, struct shm_buffer *buf, int width, int height) {
+static int buffer_create(struct scribble_wl *wl, struct shm_buffer *buf, int width, int height) {
     int stride = width * 4;
     size_t size = (size_t)stride * (size_t)height;
-    int fd = memfd_create("palimpsest", MFD_CLOEXEC);
+    int fd = memfd_create("scribbleeverywhere", MFD_CLOEXEC);
     if (fd < 0) {
         return -1;
     }
@@ -229,8 +229,8 @@ static void layer_configure(void *data, struct zwlr_layer_surface_v1 *layer,
 static void layer_closed(void *data, struct zwlr_layer_surface_v1 *layer) {
     (void)layer;
     struct output *out = data;
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_CLOSED;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_CLOSED;
     event.output_id = out->id;
     output_destroy_surface(out);
     emit(out->wl, event);
@@ -300,7 +300,7 @@ static const struct wl_output_listener output_listener = {
     .description = output_description,
 };
 
-static void ensure_cursor(struct palimpsest_wl *wl, int scale) {
+static void ensure_cursor(struct scribble_wl *wl, int scale) {
     if (scale < 1) {
         scale = 1;
     }
@@ -341,7 +341,7 @@ static void ensure_cursor(struct palimpsest_wl *wl, int scale) {
     wl->cursor_scale = scale;
 }
 
-static void set_pointer_cursor(struct palimpsest_wl *wl, struct wl_pointer *pointer,
+static void set_pointer_cursor(struct scribble_wl *wl, struct wl_pointer *pointer,
                                uint32_t serial, int scale) {
     ensure_cursor(wl, scale);
     if (!wl->cursor_surface || !wl->cursor_buffer || !wl->cursor_image) {
@@ -361,14 +361,14 @@ static void set_pointer_cursor(struct palimpsest_wl *wl, struct wl_pointer *poin
 
 static void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
                           struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y) {
-    struct palimpsest_wl *wl = data;
+    struct scribble_wl *wl = data;
     struct output *out = output_for_surface(wl, surface);
     wl->pointer_output = out ? out->id : -1;
     wl->pointer_x = wl_fixed_to_double(x);
     wl->pointer_y = wl_fixed_to_double(y);
     set_pointer_cursor(wl, pointer, serial, out ? out->scale : 1);
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_POINTER_ENTER;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_POINTER_ENTER;
     event.output_id = wl->pointer_output;
     event.x = wl->pointer_x;
     event.y = wl->pointer_y;
@@ -380,9 +380,9 @@ static void pointer_leave(void *data, struct wl_pointer *pointer, uint32_t seria
     (void)pointer;
     (void)serial;
     (void)surface;
-    struct palimpsest_wl *wl = data;
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_POINTER_LEAVE;
+    struct scribble_wl *wl = data;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_POINTER_LEAVE;
     event.output_id = wl->pointer_output;
     emit(wl, event);
     wl->pointer_output = -1;
@@ -392,11 +392,11 @@ static void pointer_motion(void *data, struct wl_pointer *pointer, uint32_t time
                            wl_fixed_t x, wl_fixed_t y) {
     (void)pointer;
     (void)time;
-    struct palimpsest_wl *wl = data;
+    struct scribble_wl *wl = data;
     wl->pointer_x = wl_fixed_to_double(x);
     wl->pointer_y = wl_fixed_to_double(y);
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_POINTER_MOTION;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_POINTER_MOTION;
     event.output_id = wl->pointer_output;
     event.x = wl->pointer_x;
     event.y = wl->pointer_y;
@@ -408,9 +408,9 @@ static void pointer_button(void *data, struct wl_pointer *pointer, uint32_t seri
     (void)pointer;
     (void)serial;
     (void)time;
-    struct palimpsest_wl *wl = data;
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_POINTER_BUTTON;
+    struct scribble_wl *wl = data;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_POINTER_BUTTON;
     event.output_id = wl->pointer_output;
     event.x = wl->pointer_x;
     event.y = wl->pointer_y;
@@ -507,9 +507,9 @@ static void keyboard_key(void *data, struct wl_keyboard *keyboard, uint32_t seri
     (void)keyboard;
     (void)serial;
     (void)time;
-    struct palimpsest_wl *wl = data;
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_KEY;
+    struct scribble_wl *wl = data;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_KEY;
     event.output_id = -1;
     event.code = key;
     // pressed (1) and repeated (2) both count as down. Release is 0.
@@ -522,9 +522,9 @@ static void keyboard_enter(void *data, struct wl_keyboard *keyboard, uint32_t se
     (void)keyboard;
     (void)serial;
     (void)surface;
-    struct palimpsest_wl *wl = data;
-    struct palimpsest_event reset = {0};
-    reset.kind = PALIMPSEST_EVENT_KEYBOARD_FOCUS_RESET;
+    struct scribble_wl *wl = data;
+    struct scribble_event reset = {0};
+    reset.kind = SCRIBBLE_EVENT_KEYBOARD_FOCUS_RESET;
     emit(wl, reset);
     // Wayland reports the keys already held on entry separately from key
     // presses. Restore only the Ctrl state needed by overlay shortcuts.
@@ -532,8 +532,8 @@ static void keyboard_enter(void *data, struct wl_keyboard *keyboard, uint32_t se
     if (keys) {
         wl_array_for_each(key, keys) {
             if (*key != 29 && *key != 97) continue;
-            struct palimpsest_event event = {0};
-            event.kind = PALIMPSEST_EVENT_KEY;
+            struct scribble_event event = {0};
+            event.kind = SCRIBBLE_EVENT_KEY;
             event.code = *key;
             event.pressed = 1;
             emit(wl, event);
@@ -546,8 +546,8 @@ static void keyboard_leave(void *data, struct wl_keyboard *keyboard, uint32_t se
     (void)keyboard;
     (void)serial;
     (void)surface;
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_KEYBOARD_FOCUS_RESET;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_KEYBOARD_FOCUS_RESET;
     emit(data, event);
 }
 
@@ -585,10 +585,10 @@ static void touch_down(void *data, struct wl_touch *touch, uint32_t serial, uint
     (void)touch;
     (void)serial;
     (void)time;
-    struct palimpsest_wl *wl = data;
+    struct scribble_wl *wl = data;
     struct output *out = output_for_surface(wl, surface);
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_TOUCH_DOWN;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_TOUCH_DOWN;
     event.output_id = out ? out->id : -1;
     event.x = wl_fixed_to_double(x);
     event.y = wl_fixed_to_double(y);
@@ -601,9 +601,9 @@ static void touch_up(void *data, struct wl_touch *touch, uint32_t serial, uint32
     (void)touch;
     (void)serial;
     (void)time;
-    struct palimpsest_wl *wl = data;
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_TOUCH_UP;
+    struct scribble_wl *wl = data;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_TOUCH_UP;
     event.output_id = -1;
     event.touch_id = id;
     event.pressed = 0;
@@ -614,9 +614,9 @@ static void touch_motion(void *data, struct wl_touch *touch, uint32_t time, int3
                          wl_fixed_t x, wl_fixed_t y) {
     (void)touch;
     (void)time;
-    struct palimpsest_wl *wl = data;
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_TOUCH_MOTION;
+    struct scribble_wl *wl = data;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_TOUCH_MOTION;
     event.output_id = -1;
     event.x = wl_fixed_to_double(x);
     event.y = wl_fixed_to_double(y);
@@ -631,8 +631,8 @@ static void touch_frame(void *data, struct wl_touch *touch) {
 
 static void touch_cancel(void *data, struct wl_touch *touch) {
     (void)touch;
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_TOUCH_CANCEL;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_TOUCH_CANCEL;
     emit(data, event);
 }
 
@@ -668,11 +668,11 @@ static void tablet_tool_proximity_in(void *data, struct zwp_tablet_tool_v2 *tool
     (void)tool;
     (void)serial;
     (void)tablet;
-    struct palimpsest_wl *wl = data;
+    struct scribble_wl *wl = data;
     struct output *out = output_for_surface(wl, surface);
     wl->tablet_output = out ? out->id : -1;
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_TABLET_PROXIMITY;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_TABLET_PROXIMITY;
     event.output_id = wl->tablet_output;
     event.pressed = 1;
     emit(wl, event);
@@ -680,9 +680,9 @@ static void tablet_tool_proximity_in(void *data, struct zwp_tablet_tool_v2 *tool
 
 static void tablet_tool_proximity_out(void *data, struct zwp_tablet_tool_v2 *tool) {
     (void)tool;
-    struct palimpsest_wl *wl = data;
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_TABLET_PROXIMITY;
+    struct scribble_wl *wl = data;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_TABLET_PROXIMITY;
     event.output_id = wl->tablet_output;
     event.pressed = 0;
     emit(wl, event);
@@ -692,9 +692,9 @@ static void tablet_tool_proximity_out(void *data, struct zwp_tablet_tool_v2 *too
 static void tablet_tool_down(void *data, struct zwp_tablet_tool_v2 *tool, uint32_t serial) {
     (void)tool;
     (void)serial;
-    struct palimpsest_wl *wl = data;
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_TABLET_DOWN;
+    struct scribble_wl *wl = data;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_TABLET_DOWN;
     event.output_id = wl->tablet_output;
     event.x = wl->tablet_x;
     event.y = wl->tablet_y;
@@ -705,9 +705,9 @@ static void tablet_tool_down(void *data, struct zwp_tablet_tool_v2 *tool, uint32
 
 static void tablet_tool_up(void *data, struct zwp_tablet_tool_v2 *tool) {
     (void)tool;
-    struct palimpsest_wl *wl = data;
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_TABLET_UP;
+    struct scribble_wl *wl = data;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_TABLET_UP;
     event.output_id = wl->tablet_output;
     event.x = wl->tablet_x;
     event.y = wl->tablet_y;
@@ -717,11 +717,11 @@ static void tablet_tool_up(void *data, struct zwp_tablet_tool_v2 *tool) {
 
 static void tablet_tool_motion(void *data, struct zwp_tablet_tool_v2 *tool, wl_fixed_t x, wl_fixed_t y) {
     (void)tool;
-    struct palimpsest_wl *wl = data;
+    struct scribble_wl *wl = data;
     wl->tablet_x = wl_fixed_to_double(x);
     wl->tablet_y = wl_fixed_to_double(y);
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_TABLET_MOTION;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_TABLET_MOTION;
     event.output_id = wl->tablet_output;
     event.x = wl->tablet_x;
     event.y = wl->tablet_y;
@@ -730,10 +730,10 @@ static void tablet_tool_motion(void *data, struct zwp_tablet_tool_v2 *tool, wl_f
 
 static void tablet_tool_pressure(void *data, struct zwp_tablet_tool_v2 *tool, uint32_t pressure) {
     (void)tool;
-    struct palimpsest_wl *wl = data;
+    struct scribble_wl *wl = data;
     wl->tablet_pressure = (double)pressure / 65535.0;
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_TABLET_PRESSURE;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_TABLET_PRESSURE;
     event.output_id = wl->tablet_output;
     event.pressure = wl->tablet_pressure;
     emit(wl, event);
@@ -743,9 +743,9 @@ static void tablet_tool_button(void *data, struct zwp_tablet_tool_v2 *tool, uint
                                uint32_t button, uint32_t state) {
     (void)tool;
     (void)serial;
-    struct palimpsest_wl *wl = data;
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_TABLET_BUTTON;
+    struct scribble_wl *wl = data;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_TABLET_BUTTON;
     event.output_id = wl->tablet_output;
     event.code = button;
     event.pressed = state == ZWP_TABLET_TOOL_V2_BUTTON_STATE_PRESSED ? 1 : 0;
@@ -755,9 +755,9 @@ static void tablet_tool_button(void *data, struct zwp_tablet_tool_v2 *tool, uint
 static void tablet_tool_frame(void *data, struct zwp_tablet_tool_v2 *tool, uint32_t time) {
     (void)tool;
     (void)time;
-    struct palimpsest_wl *wl = data;
-    struct palimpsest_event event = {0};
-    event.kind = PALIMPSEST_EVENT_TABLET_FRAME;
+    struct scribble_wl *wl = data;
+    struct scribble_event event = {0};
+    event.kind = SCRIBBLE_EVENT_TABLET_FRAME;
     event.output_id = wl->tablet_output;
     event.x = wl->tablet_x;
     event.y = wl->tablet_y;
@@ -1096,7 +1096,7 @@ static const struct zwp_tablet_seat_v2_listener tablet_seat_listener = {
     .pad_added = tablet_seat_pad_added,
 };
 
-static void ensure_tablet_seat(struct palimpsest_wl *wl) {
+static void ensure_tablet_seat(struct scribble_wl *wl) {
     if (!wl->seat || !wl->tablet_manager || wl->tablet_seat) {
         return;
     }
@@ -1107,7 +1107,7 @@ static void ensure_tablet_seat(struct palimpsest_wl *wl) {
 }
 
 static void seat_capabilities(void *data, struct wl_seat *seat, uint32_t capabilities) {
-    struct palimpsest_wl *wl = data;
+    struct scribble_wl *wl = data;
     if ((capabilities & WL_SEAT_CAPABILITY_POINTER) && !wl->pointer) {
         wl->pointer = wl_seat_get_pointer(seat);
         wl_pointer_add_listener(wl->pointer, &pointer_listener, wl);
@@ -1136,7 +1136,7 @@ static const struct wl_seat_listener seat_listener = {
 
 static void registry_global(void *data, struct wl_registry *registry, uint32_t name,
                             const char *interface, uint32_t version) {
-    struct palimpsest_wl *wl = data;
+    struct scribble_wl *wl = data;
     if (strcmp(interface, "wl_compositor") == 0) {
         wl->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, cap_version(version, 4));
     } else if (strcmp(interface, "wl_shm") == 0) {
@@ -1171,7 +1171,7 @@ static void registry_global(void *data, struct wl_registry *registry, uint32_t n
 
 static void registry_global_remove(void *data, struct wl_registry *registry, uint32_t name) {
     (void)registry;
-    struct palimpsest_wl *wl = data;
+    struct scribble_wl *wl = data;
     for (int i = 0; i < wl->output_count; i++) {
         struct output *out = &wl->outputs[i];
         if (out->alive && out->registry_name == name) {
@@ -1196,12 +1196,12 @@ static void set_error(char *error, size_t error_len, const char *message) {
     }
 }
 
-int palimpsest_wl_connect(void **out_session, palimpsest_event_fn on_event, void *userdata,
+int scribble_wl_connect(void **out_session, scribble_event_fn on_event, void *userdata,
                           char *error, size_t error_len) {
     if (out_session) {
         *out_session = NULL;
     }
-    struct palimpsest_wl *wl = calloc(1, sizeof(*wl));
+    struct scribble_wl *wl = calloc(1, sizeof(*wl));
     if (!wl) {
         set_error(error, error_len, "out of memory");
         return -1;
@@ -1225,12 +1225,12 @@ int palimpsest_wl_connect(void **out_session, palimpsest_event_fn on_event, void
 
     if (!wl->compositor || !wl->shm || !wl->layer_shell) {
         set_error(error, error_len, "compositor is missing wl_compositor, wl_shm, or zwlr_layer_shell_v1");
-        palimpsest_wl_destroy(wl);
+        scribble_wl_destroy(wl);
         return -1;
     }
     if (wl->output_count == 0) {
         set_error(error, error_len, "compositor advertised no outputs");
-        palimpsest_wl_destroy(wl);
+        scribble_wl_destroy(wl);
         return -1;
     }
     if (out_session) {
@@ -1239,8 +1239,8 @@ int palimpsest_wl_connect(void **out_session, palimpsest_event_fn on_event, void
     return 0;
 }
 
-void palimpsest_wl_destroy(void *session) {
-    struct palimpsest_wl *wl = session;
+void scribble_wl_destroy(void *session) {
+    struct scribble_wl *wl = session;
     if (!wl) {
         return;
     }
@@ -1292,8 +1292,8 @@ void palimpsest_wl_destroy(void *session) {
     free(wl);
 }
 
-void palimpsest_wl_set_margins(void *session, int32_t top, int32_t right, int32_t bottom, int32_t left) {
-    struct palimpsest_wl *wl = session;
+void scribble_wl_set_margins(void *session, int32_t top, int32_t right, int32_t bottom, int32_t left) {
+    struct scribble_wl *wl = session;
     if (!wl) {
         return;
     }
@@ -1303,8 +1303,8 @@ void palimpsest_wl_set_margins(void *session, int32_t top, int32_t right, int32_
     wl->margin_left = left;
 }
 
-int palimpsest_wl_show(void *session) {
-    struct palimpsest_wl *wl = session;
+int scribble_wl_show(void *session) {
+    struct scribble_wl *wl = session;
     if (!wl || !wl->compositor || !wl->layer_shell) {
         return -1;
     }
@@ -1320,7 +1320,7 @@ int palimpsest_wl_show(void *session) {
         }
         out->layer = zwlr_layer_shell_v1_get_layer_surface(
             wl->layer_shell, out->surface, out->output,
-            ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY, "palimpsest-ink");
+            ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY, "scribbleeverywhere");
         if (!out->layer) {
             wl_surface_destroy(out->surface);
             out->surface = NULL;
@@ -1368,8 +1368,8 @@ int palimpsest_wl_show(void *session) {
     return -1;
 }
 
-void palimpsest_wl_hide(void *session) {
-    struct palimpsest_wl *wl = session;
+void scribble_wl_hide(void *session) {
+    struct scribble_wl *wl = session;
     if (!wl) {
         return;
     }
@@ -1381,13 +1381,13 @@ void palimpsest_wl_hide(void *session) {
     }
 }
 
-int palimpsest_wl_output_count(void *session) {
-    struct palimpsest_wl *wl = session;
+int scribble_wl_output_count(void *session) {
+    struct scribble_wl *wl = session;
     return wl ? wl->output_count : 0;
 }
 
-int palimpsest_wl_output_info(void *session, int32_t index, struct palimpsest_output_info *out_info) {
-    struct palimpsest_wl *wl = session;
+int scribble_wl_output_info(void *session, int32_t index, struct scribble_output_info *out_info) {
+    struct scribble_wl *wl = session;
     if (!wl || !out_info || index < 0 || index >= wl->output_count) {
         return -1;
     }
@@ -1410,9 +1410,9 @@ int palimpsest_wl_output_info(void *session, int32_t index, struct palimpsest_ou
     return out->alive ? 0 : -1;
 }
 
-int palimpsest_wl_present(void *session, int32_t output_id, const uint8_t *rgba,
+int scribble_wl_present(void *session, int32_t output_id, const uint8_t *rgba,
                           int32_t width, int32_t height, int32_t stride) {
-    struct palimpsest_wl *wl = session;
+    struct scribble_wl *wl = session;
     struct output *out = wl ? output_by_id(wl, output_id) : NULL;
     if (!out || !out->surface || !rgba || width <= 0 || height <= 0 || stride < width * 4) {
         return -1;
@@ -1451,16 +1451,16 @@ int palimpsest_wl_present(void *session, int32_t output_id, const uint8_t *rgba,
     return 0;
 }
 
-int palimpsest_wl_roundtrip(void *session) {
-    struct palimpsest_wl *wl = session;
+int scribble_wl_roundtrip(void *session) {
+    struct scribble_wl *wl = session;
     if (!wl || !wl->display) {
         return -1;
     }
     return wl_display_roundtrip(wl->display) < 0 ? -1 : 0;
 }
 
-int palimpsest_wl_poll(void *session, const int *extra_fds, int extra_count, int *ready, int timeout_ms) {
-    struct palimpsest_wl *wl = session;
+int scribble_wl_poll(void *session, const int *extra_fds, int extra_count, int *ready, int timeout_ms) {
+    struct scribble_wl *wl = session;
     if (!wl || !wl->display) {
         return -1;
     }

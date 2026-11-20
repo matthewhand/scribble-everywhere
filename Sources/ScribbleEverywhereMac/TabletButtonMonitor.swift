@@ -1,6 +1,6 @@
 import AppKit
 import CoreGraphics
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 /// Plans synthetic mouse events in contact order. In particular, a new pen
 /// contact must post mouse-down before any drag, and the final position must

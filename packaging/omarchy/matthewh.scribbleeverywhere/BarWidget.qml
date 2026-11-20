@@ -5,11 +5,11 @@ import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 
-// Optional Omarchy bar control for the palimpsest-ink daemon.
+// Optional Omarchy bar control for the scribble daemon.
 // Left click toggles annotation, middle click pastes, right click opens the menu.
 BarWidget {
   id: root
-  moduleName: "matthewh.palimpsest-ink"
+  moduleName: "matthewh.scribbleeverywhere"
 
   property bool annotating: false
   property string ink: "#FF3B30FF"
@@ -31,7 +31,7 @@ BarWidget {
 
   readonly property string ctl: {
     var home = Quickshell.env("HOME") || ""
-    return home + "/.local/bin/palimpsestctl"
+    return home + "/.local/bin/scribblectl"
   }
 
   readonly property color inkColor: qmlColor(ink)
@@ -191,14 +191,7 @@ BarWidget {
   }
 
   function refresh() {
-    if (statusTimeout.running) return
-    if (!statusSocket.connected) {
-      statusSocket.connected = true
-      return
-    }
-    statusTimeout.start()
-    statusSocket.write("status\n")
-    statusSocket.flush()
+    if (!statusProc.running) statusProc.running = true
   }
 
   function loadMenu() {
@@ -234,35 +227,13 @@ BarWidget {
 
   Component.onCompleted: refresh()
 
-  // The daemon accepts multiple newline-delimited requests per connection.
-  Socket {
-    id: statusSocket
-    path: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/palimpsest-ink.sock"
-    onConnectionStateChanged: {
-      if (connected) {
-        root.refresh()
-      } else {
-        statusTimeout.stop()
-        root.applyStatus("")
-      }
+  Process {
+    id: statusProc
+    command: [root.ctl, "status"]
+    stdout: StdioCollector {
+      waitForEnd: true
+      onStreamFinished: root.applyStatus(text)
     }
-    onError: {
-      statusTimeout.stop()
-      root.applyStatus("")
-    }
-    parser: SplitParser {
-      onRead: function(line) {
-        if (!statusTimeout.running) return
-        statusTimeout.stop()
-        root.applyStatus(line)
-      }
-    }
-  }
-
-  Timer {
-    id: statusTimeout
-    interval: 5000
-    onTriggered: statusSocket.connected = false
   }
 
   Process {

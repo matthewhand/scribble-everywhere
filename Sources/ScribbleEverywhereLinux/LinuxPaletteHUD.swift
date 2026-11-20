@@ -1,6 +1,6 @@
 import Foundation
-import PalimpsestCore
-import CPalimpsestLinux
+import ScribbleEverywhereCore
+import CScribbleEverywhereLinux
 
 enum LinuxFloatingPalette: String {
     case none
@@ -39,7 +39,7 @@ struct LinuxPaletteHUD {
     var clear: Rect
     var save: Rect
 
-    static func make(palette: Palette, overlay: palimpsest_output_info, position: LinuxFloatingPalette) -> LinuxPaletteHUD? {
+    static func make(palette: Palette, overlay: scribble_output_info, position: LinuxFloatingPalette) -> LinuxPaletteHUD? {
         guard position != .none, overlay.logical_width > 0, overlay.logical_height > 0 else { return nil }
         let count = max(palette.colors.count, 1)
         let width = Double(count) * 34 + 72
@@ -78,7 +78,7 @@ struct LinuxPaletteHUD {
         return nil
     }
 
-    func paint(palette: Palette, onto image: inout ImageBuffer, overlay: palimpsest_output_info) {
+    func paint(palette: Palette, onto image: inout ImageBuffer, overlay: scribble_output_info) {
         let scaleX = overlay.logical_width > 0 ? Double(overlay.buffer_width) / Double(overlay.logical_width) : Double(max(overlay.scale, 1))
         let scaleY = overlay.logical_height > 0 ? Double(overlay.buffer_height) / Double(overlay.logical_height) : scaleX
         fillRoundRect(&image, rect: frame, radius: 24, color: RGBA(r: 22, g: 22, b: 24, a: 210), scaleX: scaleX, scaleY: scaleY)

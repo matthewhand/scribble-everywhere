@@ -1,4 +1,4 @@
-#include "CPalimpsestLinux.h"
+#include "CScribbleEverywhereLinux.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -10,7 +10,7 @@
 
 extern char **environ;
 
-void palimpsest_process_terminate(int pid, int needs_reap) {
+void scribble_process_terminate(int pid, int needs_reap) {
     if (pid <= 0 || !needs_reap) return;
     // A tool may launch a legitimate application; only signal its direct
     // child and close our own pipes, never a process group or descendants.
@@ -19,7 +19,7 @@ void palimpsest_process_terminate(int pid, int needs_reap) {
     while (waitpid(pid, &status, 0) < 0 && errno == EINTR) {}
 }
 
-int palimpsest_process_poll(int pid, int *status) {
+int scribble_process_poll(int pid, int *status) {
     int raw;
     pid_t result = waitpid(pid, &raw, WNOHANG);
     if (result == 0 || (result < 0 && errno == EINTR)) return 0;
@@ -30,7 +30,7 @@ int palimpsest_process_poll(int pid, int *status) {
     return 1;
 }
 
-int palimpsest_process_spawn(const char *path, char *const *argv, int *pid,
+int scribble_process_spawn(const char *path, char *const *argv, int *pid,
                              int *stdout_fd, int *stderr_fd) {
     int out[2] = {-1, -1}, err[2] = {-1, -1};
     posix_spawn_file_actions_t actions;
@@ -77,7 +77,7 @@ int palimpsest_process_spawn(const char *path, char *const *argv, int *pid,
     int err_flags = fcntl(err[0], F_GETFL);
     if (out_flags < 0 || err_flags < 0 || fcntl(out[0], F_SETFL, out_flags | O_NONBLOCK) < 0 ||
         fcntl(err[0], F_SETFL, err_flags | O_NONBLOCK) < 0) {
-        palimpsest_process_terminate(child, 1);
+        scribble_process_terminate(child, 1);
         goto cleanup;
     }
     *pid = (int)child;

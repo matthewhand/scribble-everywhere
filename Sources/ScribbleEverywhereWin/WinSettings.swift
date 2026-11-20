@@ -1,6 +1,6 @@
 import Foundation
 import WinSDK
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 /// Native settings window: edits a draft until Save, keeping the tray available.
 @MainActor
@@ -11,7 +11,7 @@ final class WinSettings {
     private var scale = 1.0
     var onSave: ((WinConfig) -> String?)?
     var onMenu: ((HWND) -> Void)?
-    private static let className = "PalimpsestInkSettings"
+    private static let className = "ScribbleEverywhereSettings"
     private static let modifierMasks: [UInt32] = [3, 6, 5, 7, 2, 1, 4, 10, 9, 12, 11, 13, 14, 15, 8]
     private enum ID {
         static let save = 1, close = 2, status = 3, ink = 10, modifiers = 11, key = 12

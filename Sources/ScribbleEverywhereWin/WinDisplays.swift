@@ -1,6 +1,6 @@
 import Foundation
 import WinSDK
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 /// A single Windows display in the core's top-left-origin global space.
 /// Virtual-screen coordinates are already top-left-origin, so no flipping is

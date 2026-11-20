@@ -1,45 +1,102 @@
-# macOS capture and paste permissions
+# Troubleshooting TCC permissions (Screen Recording / Accessibility)
 
-ScribbleEverywhere needs Screen Recording to capture windows and Accessibility
-to inspect targets and post paste shortcuts. Grant these in System Settings →
-Privacy & Security, then relaunch the app in your local desktop session.
+This is the post-mortem of the "copy never lands, macOS keeps asking me to
+toggle Screen Recording" saga, written so a future agent (or maintainer) can
+diagnose it in minutes instead of hours.
 
-## If capture or paste stops working
+## Symptoms
 
-1. Use **Check Permissions** in the app menu to inspect the current grant state.
-2. Confirm that the app bundle you launched is the one listed in System Settings.
-3. If you rebuilt or changed the signature, macOS may require a new grant.
-4. Check that the selected window still exists and that the paste destination
-   accepts images.
+- macOS repeatedly prompts for Screen Recording; toggling it on in System
+  Settings appears to succeed but the app still cannot capture.
+- Toggling the permission off and back on, relaunching, even rebooting does not
+  help.
+- `codesign` fails with `resource fork, Finder information, or similar detritus
+  not allowed`.
+- The app works right after granting, then silently loses the grant after the
+  next rebuild.
 
-## Local signing
+## Root causes (there were three, stacked)
 
-The build script prefers an existing local identity named `Palimpsest Ink` and
-otherwise attempts ad-hoc signing. Changes to a build's signature can affect
-permission continuity. Local self-signing does not provide Developer ID
-reputation or notarization.
+1. **Ad-hoc signing invalidates TCC grants on every rebuild.** TCC keys
+   Screen Recording / Accessibility grants on the app's *code signature*. An
+   ad-hoc signature (`codesign --sign -`) has no designated requirement beyond
+   the cdhash, which changes with every rebuild — so every rebuild looked like
+   a *different app* to TCC and the grant silently stopped applying. The System
+   Settings toggle kept editing a stale entry for a binary that no longer
+   existed.
+2. **No signing identity existed** (`security find-identity -v -p codesigning`
+   → 0 valid identities), so the build script had always fallen back to ad-hoc.
+3. **The app bundle was assembled inside `~/Documents`.** iCloud FileProvider
+   syncs Documents and re-stamps `com.apple.FinderInfo` /
+   `com.apple.fileprovider.fpfs#P` xattrs on the bundle, which `codesign`
+   refuses to sign over. Worse, `xattr -cr` *appears* to strip them, and
+   FileProvider immediately re-adds them, so the failure is non-deterministic.
 
-The optional `scripts/make-signing-cert.sh` creates a local code-signing
-certificate and private keys, imports them into the login keychain, and trusts
-the certificate for code signing in the user domain. Review the script before
-running it. It changes local trust settings. Keep the generated files under
-`build/signing/` private; never commit or distribute them.
+## The fix (as implemented)
 
-The bundle is assembled under
-`~/Library/Application Support/PalimpsestInk/`, outside common synced folders.
-File-provider metadata in synced folders can interfere with signing. You can
-inspect the bundle with `codesign --verify` and `codesign -dvv`.
+- `scripts/make-signing-cert.sh` — one-time creation of a self-signed local
+  code-signing identity (`CN = ScribbleEverywhere`, RSA 2048, 10-year leaf + CA,
+  `extendedKeyUsage=codeSigning`), imported into the login keychain and trusted
+  for code signing in the user domain (`security add-trusted-cert -p codeSign`,
+  no admin required). The script is idempotent and exits early if the identity
+  exists. Private keys live in `build/signing/`, which is gitignored — never
+  commit or share them.
+- `scripts/make-app.sh` — prefers that identity; falls back to ad-hoc with a
+  loud warning. Assembles the bundle in
+  `~/Library/Application Support/ScribbleEverywhere/`, outside any iCloud-synced
+  directory.
+- A menu item, **Check Permissions**, prints the live TCC status into the HUD
+  (`Screen Recording: granted/denied — Accessibility: granted/denied`) so the
+  grant state can be verified without touching System Settings.
 
-## Resetting a stale permission entry
-
-Only if a permission entry is stale, you can reset that app's grants:
+After switching signatures, the stale TCC entries were cleared once:
 
 ```sh
-tccutil reset ScreenCapture dev.matthewhand.palimpsest
-tccutil reset Accessibility dev.matthewhand.palimpsest
+tccutil reset ScreenCapture dev.matthewhand.scribbleeverywhere
+tccutil reset Accessibility  dev.matthewhand.scribbleeverywhere
+./run.sh        # relaunch, grant each permission once, done forever
 ```
 
-These commands revoke the existing grants for this bundle identifier. Relaunch
-and grant the required permissions again in the local GUI session. Do not edit
-the TCC database directly. Renaming the bundle identifier also changes the
-permission identity.
+## Diagnostic playbook
+
+Work down this list in order:
+
+1. **Does the binary have a stable signature?**
+   ```sh
+   security find-identity -v -p codesigning          # need "ScribbleEverywhere"
+   codesign -dvv "$HOME/Library/Application Support/ScribbleEverywhere/ScribbleEverywhere.app" 2>&1 | grep -i authority
+   ```
+   `Authority=ScribbleEverywhere` (+ `Authority=ScribbleEverywhere CA`) is correct;
+   nothing, or `linker-signed`/ad-hoc, is the bug.
+2. **Does the grant survive a rebuild?** Run `./run.sh --build` twice; after
+   the second launch, **Check Permissions** must still say `granted`. If it
+   flips to denied, the signature changed (see 1).
+3. **Is the bundle signable at all?**
+   ```sh
+   codesign --verify <app>        # "detritus not allowed" ⇒ xattr problem
+   xattr -lr <app>                # look for FinderInfo / fpfs / provenance
+   ```
+   `com.apple.provenance` is system-managed and harmless. `FinderInfo` /
+   `fpfs#P` re-added instantly by FileProvider means the bundle is inside an
+   iCloud-synced tree — move it out (that is what the Application Support
+   staging directory is for).
+4. **Are the TCC entries sane for the current signature?** When in doubt:
+   `tccutil reset ScreenCapture dev.matthewhand.scribbleeverywhere` and grant once
+   more. Prefer `tccutil` over editing `~/Library/Application
+   Support/com.apple.TCC/TCC.db` (editing TCC.db needs Full Disk Access and is
+   fragile across macOS versions).
+5. **Run at the machine.** Over SSH, TCC prompts cannot be displayed to the
+   remote session, so grants never associate. Granting must happen in a local
+   GUI session.
+
+## Rules for future changes
+
+- Never ad-hoc-sign (`codesign --sign -`) a build that needs TCC permissions
+  and will be rebuilt. Use the stable identity, or a real Developer ID if one
+  is ever available.
+- Never move the assembled bundle back under `~/Documents`, `~/Desktop`, or
+  another FileProvider-synced path.
+- If permission prompts ever return after a rebuild, suspect the signature
+  first (`codesign -dvv`), not the user's settings.
+- Renaming the bundle identifier (`dev.matthewhand.scribbleeverywhere`) invalidates
+  every existing grant; treat it as a permission reset event.

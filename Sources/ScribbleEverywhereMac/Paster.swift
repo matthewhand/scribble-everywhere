@@ -1,13 +1,13 @@
 import AppKit
 import ApplicationServices
 import CoreGraphics
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 /// Reactivates the target application and sends ⌘V. Requires Accessibility
 /// permission; without it we cannot synthesise keystrokes, so we report the
 /// failure instead of pretending the paste happened.
 @MainActor
-final class Paster: PalimpsestCore.Paster {
+final class Paster: ScribbleEverywhereCore.Paster {
     private let log: (String) -> Void
     private let isTrusted: () -> Bool
     private let activate: (String, pid_t?) async -> Bool
@@ -59,7 +59,7 @@ final class Paster: PalimpsestCore.Paster {
             ?? (expectedProcessID == nil ? NSRunningApplication.runningApplications(withBundleIdentifier: applicationID).first : nil)
         guard let app, app.bundleIdentifier == applicationID,
               !app.isTerminated, app.processIdentifier != ProcessInfo.processInfo.processIdentifier else { return false }
-        await NSApp.yieldActivation(to: app)
+        NSApp.yieldActivation(to: app)
         app.activate(options: [])
         let timeout: TimeInterval = 1.5
         let deadline = Date().addingTimeInterval(timeout)

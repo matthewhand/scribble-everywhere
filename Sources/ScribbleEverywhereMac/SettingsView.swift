@@ -1,6 +1,6 @@
 import SwiftUI
 import AppKit
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 struct SettingsView: View {
     @ObservedObject var store: SettingsStore
