@@ -1,6 +1,6 @@
 import Foundation
 import WinSDK
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 /// Transparent topmost overlay window covering one display, in the same spirit
 /// as the macOS `OverlayWindow`/`OverlayManager`.
@@ -11,8 +11,8 @@ import PalimpsestCore
 ///   image is composited from the stroke model (not the pixels) by
 ///   `BufferInkCompositor`, exactly like macOS.
 @MainActor
-final class WinOverlay: PalimpsestCore.OverlayHost {
-    static let className = "PalimpsestInkOverlay"
+final class WinOverlay: ScribbleEverywhereCore.OverlayHost {
+    static let className = "ScribbleEverywhereOverlay"
     /// Opt-in runtime validation: expose the real overlay to window automation.
     /// Normal use retains the tool-window style and stays out of the taskbar.
     static var validationWindow = false

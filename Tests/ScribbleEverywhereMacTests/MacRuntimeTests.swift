@@ -1,8 +1,8 @@
 import AppKit
 import ServiceManagement
 import Testing
-import PalimpsestCore
-@testable import PalimpsestInk
+import ScribbleEverywhereCore
+@testable import ScribbleEverywhere
 
 @Suite("Mac runtime boundaries")
 @MainActor
@@ -54,7 +54,7 @@ struct MacRuntimeTests {
     }
 
     @Test func privatePasteboardContainsTheWrittenImageData() {
-        let pasteboard = NSPasteboard(name: .init("PalimpsestTests-\(UUID().uuidString)"))
+        let pasteboard = NSPasteboard(name: .init("ScribbleEverywhereTests-\(UUID().uuidString)"))
         defer { pasteboard.releaseGlobally() }
         let png = Data([137, 80, 78, 71, 13, 10, 26, 10])
         let image = ImageBuffer(width: 1, height: 1, pixels: [255, 0, 0, 255])
@@ -101,9 +101,9 @@ struct MacRuntimeTests {
     }
 
     @Test func ownFrontmostAppFallsBackToExternalCaptureTarget() {
-        #expect(WindowTargeting.previousApplication(frontmost: "palimpsest", own: "palimpsest", target: "editor") == "editor")
-        #expect(WindowTargeting.previousApplication(frontmost: nil, own: "palimpsest", target: "editor") == "editor")
-        #expect(WindowTargeting.previousApplication(frontmost: "browser", own: "palimpsest", target: "editor") == "browser")
+        #expect(WindowTargeting.previousApplication(frontmost: "scribble", own: "scribble", target: "editor") == "editor")
+        #expect(WindowTargeting.previousApplication(frontmost: nil, own: "scribble", target: "editor") == "editor")
+        #expect(WindowTargeting.previousApplication(frontmost: "browser", own: "scribble", target: "editor") == "browser")
     }
 
     @Test func missingOrInvalidPasteDestinationNeverFallsBackToAnotherApp() {
@@ -294,7 +294,7 @@ struct MacRuntimeTests {
     }
 
     @Test func loginFailureRestoresActualStateWithoutRecursiveRetries() throws {
-        let suite = "PalimpsestTests-\(UUID().uuidString)"
+        let suite = "ScribbleEverywhereTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         var calls = 0
@@ -310,7 +310,7 @@ struct MacRuntimeTests {
     }
 
     @Test func newDefaultsMatchOtherPlatformsAndExplicitPreferencesSurvive() throws {
-        let suite = "PalimpsestTests-\(UUID().uuidString)"
+        let suite = "ScribbleEverywhereTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let fresh = SettingsStore(defaults: defaults, updateLoginItem: { _ in }, loginStatus: { .notRegistered })
@@ -326,7 +326,7 @@ struct MacRuntimeTests {
     }
 
     @Test func invalidStoredHotkeysFallBackWithoutCrashing() throws {
-        let suite = "PalimpsestTests-\(UUID().uuidString)"
+        let suite = "ScribbleEverywhereTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         for (code, modifiers) in [(-1, 1), (Int(UInt32.max) + 1, 1), (2, 0), (2, 16), (55, 1)] {
@@ -342,7 +342,7 @@ struct MacRuntimeTests {
     }
 
     @Test func recolouringMovesNameWithoutLeavingOrphans() throws {
-        let suite = "PalimpsestTests-\(UUID().uuidString)"
+        let suite = "ScribbleEverywhereTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let store = SettingsStore(defaults: defaults, updateLoginItem: { _ in }, loginStatus: { .notRegistered })
@@ -368,7 +368,7 @@ struct MacRuntimeTests {
     }
 
     @Test func exportsAtSameInstantDoNotOverwriteEachOther() throws {
-        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("PalimpsestTests-\(UUID().uuidString)", isDirectory: true)
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("ScribbleEverywhereTests-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: folder) }
         let history = AnnotationHistory(folder: folder, now: { Date(timeIntervalSince1970: 0) })
         let firstData = Data([1, 2, 3]), secondData = Data([4, 5, 6])

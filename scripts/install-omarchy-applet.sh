@@ -5,8 +5,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-src="packaging/omarchy/matthewh.palimpsest-ink"
-dest="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/plugins/matthewh.palimpsest-ink"
+src="packaging/omarchy/matthewh.scribbleeverywhere"
+dest="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/plugins/matthewh.scribbleeverywhere"
 shell_json="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/shell.json"
 
 mkdir -p "$dest"
@@ -24,7 +24,7 @@ with open(path) as handle:
     config = json.load(handle)
 bar = config.setdefault("bar", {})
 layout = bar.setdefault("layout", {})
-widget_id = "matthewh.palimpsest-ink"
+widget_id = "matthewh.scribbleeverywhere"
 found = False
 for section, entries in layout.items():
     if not isinstance(entries, list):

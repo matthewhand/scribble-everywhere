@@ -1,5 +1,5 @@
 import AppKit
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 enum ScreenGeometry {
     /// Displays in top-left-origin global coordinates with pixel scale.

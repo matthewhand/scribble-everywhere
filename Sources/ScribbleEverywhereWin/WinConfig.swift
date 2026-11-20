@@ -1,9 +1,9 @@
 import Foundation
 import WinSDK
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 /// Persisted settings, mirroring the macOS store: JSON at
-/// %APPDATA%\PalimpsestInk\config.json.
+/// %APPDATA%\ScribbleEverywhere\config.json.
 struct WinConfig: Codable {
     /// Windows virtual key code (0x44 = D).
     var hotkeyCode: UInt32 = 0x44
@@ -105,7 +105,7 @@ struct WinConfig: Codable {
 
     static func configPath() -> String {
         let base = env("APPDATA") ?? "."
-        return "\(base)\\PalimpsestInk\\config.json"
+        return "\(base)\\ScribbleEverywhere\\config.json"
     }
 
     /// Hotkey label like "Ctrl+Alt+D".

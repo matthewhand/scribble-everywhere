@@ -1,9 +1,9 @@
 import AppKit
 import Carbon.HIToolbox
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 /// Registers a global hotkey via Carbon's `RegisterEventHotKey`.
-final class HotkeyRegistrar: PalimpsestCore.HotkeyRegistrar {
+final class HotkeyRegistrar: ScribbleEverywhereCore.HotkeyRegistrar {
     var onHotkey: (() -> Void)?
 
     private var hotKeyRef: EventHotKeyRef?

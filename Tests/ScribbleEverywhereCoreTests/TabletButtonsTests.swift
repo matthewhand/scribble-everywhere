@@ -1,5 +1,5 @@
 import Testing
-@testable import PalimpsestCore
+@testable import ScribbleEverywhereCore
 
 @Suite("Tablet buttons")
 struct TabletButtonsTests {

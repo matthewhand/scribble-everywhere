@@ -1,6 +1,6 @@
 import AppKit
 import Combine
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 @MainActor
 final class AppController: ObservableObject {

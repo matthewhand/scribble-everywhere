@@ -1,8 +1,8 @@
 import SwiftUI
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 @main
-struct PalimpsestInkApp: App {
+struct ScribbleEverywhereApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var controller = AppController.shared
 

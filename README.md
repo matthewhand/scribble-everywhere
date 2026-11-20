@@ -38,7 +38,7 @@ what is visible in the capture before sharing.
 ## Shortcuts
 
 Start/stop: **Ctrl+Alt+D** on Windows, **⌥⌘D** on macOS.
-On Hyprland, configure a binding for `scribbleeverywherectl toggle`.
+On Hyprland, configure a binding for `scribblectl toggle`.
 
 While annotating: **Ctrl+Z** undo, **Ctrl+Backspace** clear, **Ctrl+C** copy,
 **Ctrl+Enter** copy and paste, **Esc** stop and keep ink.

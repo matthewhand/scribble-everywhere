@@ -1,6 +1,6 @@
 import Foundation
 import WinSDK
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 /// Swatch bar shown only while annotating. It sits above the full-screen
 /// overlay (`HWND_TOPMOST`, shown after the overlay) and does not activate,
@@ -8,7 +8,7 @@ import PalimpsestCore
 /// (none / topLeft / topRight).
 @MainActor
 final class WinFloatingPalette {
-    static let className = "PalimpsestInkPalette"
+    static let className = "ScribbleEverywherePalette"
 
     var onSelect: ((Int) -> Void)?
     var onClear: (() -> Void)?

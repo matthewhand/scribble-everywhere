@@ -1,7 +1,7 @@
 import Foundation
 import Testing
-import PalimpsestCore
-@testable import PalimpsestWin
+import ScribbleEverywhereCore
+@testable import ScribbleEverywhereWin
 
 @Suite("Windows configuration migration")
 struct ConfigTests {

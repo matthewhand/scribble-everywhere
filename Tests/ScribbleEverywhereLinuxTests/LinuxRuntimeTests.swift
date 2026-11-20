@@ -2,9 +2,9 @@ import Foundation
 import Dispatch
 import Glibc
 import Testing
-import PalimpsestCore
-import CPalimpsestLinux
-@testable import PalimpsestLinux
+import ScribbleEverywhereCore
+import CScribbleEverywhereLinux
+@testable import ScribbleEverywhereLinux
 
 @Suite("Linux runtime boundaries")
 struct LinuxRuntimeTests {
@@ -112,9 +112,9 @@ struct LinuxRuntimeTests {
         let directory = try scratch()
         defer { try? FileManager.default.removeItem(at: directory) }
         let path = directory.appendingPathComponent("ink.desktop").path
-        #expect(LinuxAutostart.setEnabled(true, at: path, binary: "/tmp/Ink 100%/palimpsest-ink"))
+        #expect(LinuxAutostart.setEnabled(true, at: path, binary: "/tmp/Ink 100%/scribble"))
         let entry = try String(contentsOfFile: path, encoding: .utf8)
-        #expect(entry.contains("Exec=\"/tmp/Ink 100%%/palimpsest-ink\" daemon"))
+        #expect(entry.contains("Exec=\"/tmp/Ink 100%%/scribble\" daemon"))
         #expect(LinuxAutostart.setEnabled(false, at: path))
         #expect(!FileManager.default.fileExists(atPath: path))
         #expect(!LinuxAutostart.setEnabled(false, at: directory.path))
@@ -157,7 +157,7 @@ struct LinuxRuntimeTests {
         let environment = Shell.run("/bin/sh", arguments: ["-c", "printf '%s' \"$PATH\""])
         #expect(environment.status == 0)
         #expect(String(data: environment.stdout, encoding: .utf8) == (env("PATH") ?? ""))
-        #expect(Shell.run("/definitely-not-a-palimpsest-command", arguments: []).status == -1)
+        #expect(Shell.run("/definitely-not-a-scribble-command", arguments: []).status == -1)
         #expect(Shell.run("/bin/sh", arguments: ["-c", "kill -TERM $$"]).status == 143)
         #expect(Shell.run("/bin/sh", arguments: ["-c", "kill -PIPE $$"]).status == 141)
     }
@@ -256,7 +256,7 @@ struct LinuxRuntimeTests {
     }
 
     private func scratch() throws -> URL {
-        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("palimpsest-test-\(UUID().uuidString)")
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("scribble-test-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory
     }
@@ -271,8 +271,8 @@ struct LinuxRuntimeTests {
 
 @Suite("Linux contact lifecycle")
 struct LinuxContactTests {
-    private func event(_ kind: Int, id: Int32 = 1, x: Double = 10, y: Double = 20, pressed: Int32 = 0, code: UInt32 = 0, pressure: Double = 0.5) -> palimpsest_event {
-        var event = palimpsest_event()
+    private func event(_ kind: Int, id: Int32 = 1, x: Double = 10, y: Double = 20, pressed: Int32 = 0, code: UInt32 = 0, pressure: Double = 0.5) -> scribble_event {
+        var event = scribble_event()
         event.kind = Int32(kind)
         event.output_id = -1
         event.touch_id = id
@@ -287,39 +287,39 @@ struct LinuxContactTests {
     @Test func canceledTouchDiscardsOnlyItsInkAndNextTouchCanDraw() {
         let daemon = LinuxDaemon(config: LinuxConfig())
         daemon.beginInputSession()
-        daemon.handle(event(PALIMPSEST_EVENT_TOUCH_DOWN))
-        daemon.handle(event(PALIMPSEST_EVENT_TOUCH_UP))
-        daemon.handle(event(PALIMPSEST_EVENT_TOUCH_DOWN, id: 2))
-        daemon.handle(event(PALIMPSEST_EVENT_TOUCH_CANCEL))
+        daemon.handle(event(SCRIBBLE_EVENT_TOUCH_DOWN))
+        daemon.handle(event(SCRIBBLE_EVENT_TOUCH_UP))
+        daemon.handle(event(SCRIBBLE_EVENT_TOUCH_DOWN, id: 2))
+        daemon.handle(event(SCRIBBLE_EVENT_TOUCH_CANCEL))
         #expect(daemon.canvas.strokes.count == 1)
         #expect(daemon.canvas.current == nil)
-        daemon.handle(event(PALIMPSEST_EVENT_TOUCH_DOWN, id: 3))
-        daemon.handle(event(PALIMPSEST_EVENT_TOUCH_UP, id: 3))
+        daemon.handle(event(SCRIBBLE_EVENT_TOUCH_DOWN, id: 3))
+        daemon.handle(event(SCRIBBLE_EVENT_TOUCH_UP, id: 3))
         #expect(daemon.canvas.strokes.count == 2)
     }
 
     @Test func foreignTouchesAndMouseCannotChangeTheOwnedTouch() {
         let daemon = LinuxDaemon(config: LinuxConfig())
         daemon.beginInputSession()
-        daemon.handle(event(PALIMPSEST_EVENT_TOUCH_DOWN))
-        daemon.handle(event(PALIMPSEST_EVENT_TOUCH_DOWN, id: 2, x: 999))
-        daemon.handle(event(PALIMPSEST_EVENT_POINTER_MOTION, x: 888))
-        daemon.handle(event(PALIMPSEST_EVENT_POINTER_BUTTON, pressed: 1, code: 0x110))
-        daemon.handle(event(PALIMPSEST_EVENT_TOUCH_UP, id: 2))
+        daemon.handle(event(SCRIBBLE_EVENT_TOUCH_DOWN))
+        daemon.handle(event(SCRIBBLE_EVENT_TOUCH_DOWN, id: 2, x: 999))
+        daemon.handle(event(SCRIBBLE_EVENT_POINTER_MOTION, x: 888))
+        daemon.handle(event(SCRIBBLE_EVENT_POINTER_BUTTON, pressed: 1, code: 0x110))
+        daemon.handle(event(SCRIBBLE_EVENT_TOUCH_UP, id: 2))
         #expect(daemon.canvas.current?.points.count == 1)
-        daemon.handle(event(PALIMPSEST_EVENT_TOUCH_UP))
+        daemon.handle(event(SCRIBBLE_EVENT_TOUCH_UP))
         #expect(daemon.canvas.strokes.first?.points.last?.location == Point(x: 10, y: 20))
     }
 
     @Test func penProximityRejectsPalmAndSessionRestartKeepsFinishedInk() {
         let daemon = LinuxDaemon(config: LinuxConfig())
         daemon.beginInputSession()
-        daemon.handle(event(PALIMPSEST_EVENT_TOUCH_DOWN))
-        daemon.handle(event(PALIMPSEST_EVENT_TABLET_PROXIMITY, pressed: 1))
+        daemon.handle(event(SCRIBBLE_EVENT_TOUCH_DOWN))
+        daemon.handle(event(SCRIBBLE_EVENT_TABLET_PROXIMITY, pressed: 1))
         #expect(!daemon.canvas.hasContent)
         daemon.finishInputSession()
         daemon.beginInputSession()
-        daemon.handle(event(PALIMPSEST_EVENT_TOUCH_DOWN, id: 3))
+        daemon.handle(event(SCRIBBLE_EVENT_TOUCH_DOWN, id: 3))
         daemon.finishInputSession()
         #expect(daemon.canvas.strokes.count == 1)
         daemon.beginInputSession()
@@ -330,41 +330,41 @@ struct LinuxContactTests {
     @Test func penLiftKeepsTheLastContactPressure() {
         let daemon = LinuxDaemon(config: LinuxConfig())
         daemon.beginInputSession()
-        daemon.handle(event(PALIMPSEST_EVENT_TABLET_PROXIMITY, pressed: 1))
-        daemon.handle(event(PALIMPSEST_EVENT_TABLET_PRESSURE, pressure: 0.8))
-        daemon.handle(event(PALIMPSEST_EVENT_TABLET_DOWN))
-        daemon.handle(event(PALIMPSEST_EVENT_TABLET_FRAME))
-        daemon.handle(event(PALIMPSEST_EVENT_TABLET_PRESSURE, pressure: 0))
-        daemon.handle(event(PALIMPSEST_EVENT_TABLET_UP))
-        daemon.handle(event(PALIMPSEST_EVENT_TABLET_FRAME))
+        daemon.handle(event(SCRIBBLE_EVENT_TABLET_PROXIMITY, pressed: 1))
+        daemon.handle(event(SCRIBBLE_EVENT_TABLET_PRESSURE, pressure: 0.8))
+        daemon.handle(event(SCRIBBLE_EVENT_TABLET_DOWN))
+        daemon.handle(event(SCRIBBLE_EVENT_TABLET_FRAME))
+        daemon.handle(event(SCRIBBLE_EVENT_TABLET_PRESSURE, pressure: 0))
+        daemon.handle(event(SCRIBBLE_EVENT_TABLET_UP))
+        daemon.handle(event(SCRIBBLE_EVENT_TABLET_FRAME))
         #expect(daemon.canvas.strokes.first?.points.last?.pressure == 0.8)
     }
 
     @Test func keyboardFocusResetClearsModifiersAndDuplicatePressesDoNotStick() {
         let daemon = LinuxDaemon(config: LinuxConfig())
         daemon.beginInputSession()
-        daemon.handle(event(PALIMPSEST_EVENT_TOUCH_DOWN))
-        daemon.handle(event(PALIMPSEST_EVENT_TOUCH_UP))
-        daemon.handle(event(PALIMPSEST_EVENT_KEY, pressed: 1, code: 29))
-        daemon.handle(event(PALIMPSEST_EVENT_KEYBOARD_FOCUS_RESET))
-        daemon.handle(event(PALIMPSEST_EVENT_KEY, pressed: 1, code: 44))
+        daemon.handle(event(SCRIBBLE_EVENT_TOUCH_DOWN))
+        daemon.handle(event(SCRIBBLE_EVENT_TOUCH_UP))
+        daemon.handle(event(SCRIBBLE_EVENT_KEY, pressed: 1, code: 29))
+        daemon.handle(event(SCRIBBLE_EVENT_KEYBOARD_FOCUS_RESET))
+        daemon.handle(event(SCRIBBLE_EVENT_KEY, pressed: 1, code: 44))
         daemon.drainActions()
         #expect(daemon.canvas.strokes.count == 1)
 
-        daemon.handle(event(PALIMPSEST_EVENT_KEY, pressed: 1, code: 29))
-        daemon.handle(event(PALIMPSEST_EVENT_KEY, pressed: 1, code: 29))
-        daemon.handle(event(PALIMPSEST_EVENT_KEY, pressed: 0, code: 29))
-        daemon.handle(event(PALIMPSEST_EVENT_KEY, pressed: 1, code: 44))
+        daemon.handle(event(SCRIBBLE_EVENT_KEY, pressed: 1, code: 29))
+        daemon.handle(event(SCRIBBLE_EVENT_KEY, pressed: 1, code: 29))
+        daemon.handle(event(SCRIBBLE_EVENT_KEY, pressed: 0, code: 29))
+        daemon.handle(event(SCRIBBLE_EVENT_KEY, pressed: 1, code: 44))
         daemon.drainActions()
         #expect(daemon.canvas.strokes.count == 1)
 
         // Focus entry replays held Ctrl keys; releasing one must not release
         // the other if the user is holding both.
-        daemon.handle(event(PALIMPSEST_EVENT_KEYBOARD_FOCUS_RESET))
-        daemon.handle(event(PALIMPSEST_EVENT_KEY, pressed: 1, code: 29))
-        daemon.handle(event(PALIMPSEST_EVENT_KEY, pressed: 1, code: 97))
-        daemon.handle(event(PALIMPSEST_EVENT_KEY, pressed: 0, code: 29))
-        daemon.handle(event(PALIMPSEST_EVENT_KEY, pressed: 1, code: 44))
+        daemon.handle(event(SCRIBBLE_EVENT_KEYBOARD_FOCUS_RESET))
+        daemon.handle(event(SCRIBBLE_EVENT_KEY, pressed: 1, code: 29))
+        daemon.handle(event(SCRIBBLE_EVENT_KEY, pressed: 1, code: 97))
+        daemon.handle(event(SCRIBBLE_EVENT_KEY, pressed: 0, code: 29))
+        daemon.handle(event(SCRIBBLE_EVENT_KEY, pressed: 1, code: 44))
         daemon.drainActions()
         #expect(daemon.canvas.strokes.isEmpty)
     }

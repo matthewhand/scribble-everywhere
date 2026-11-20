@@ -1,12 +1,12 @@
 import Foundation
 import Glibc
-import PalimpsestCore
-import CPalimpsestLinux
+import ScribbleEverywhereCore
+import CScribbleEverywhereLinux
 
-/// `palimpsest-ink daemon` runs the overlay. Any other command talks to it
+/// `scribble daemon` runs the overlay. Any other command talks to it
 /// over a Unix socket and starts the daemon if it is not already running.
 @main
-struct PalimpsestLinuxApp {
+struct ScribbleEverywhereLinuxApp {
     static func main() {
         let arguments = Array(CommandLine.arguments.dropFirst())
         guard let command = arguments.first else {
@@ -22,7 +22,7 @@ struct PalimpsestLinuxApp {
         case "help", "--help", "-h":
             print(usage)
         case "version", "--version":
-            print(PalimpsestVersion.displayString)
+            print(ScribbleEverywhereVersion.displayString)
         case "self-test":
             let failures = LinuxSelfTest.run()
             if failures.isEmpty {
@@ -112,8 +112,7 @@ struct PalimpsestLinuxApp {
             return URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
                 .appendingPathComponent(raw).path
         }
-        return Tools.path("scribbleeverywhere") ?? Tools.path("scribbleeverywherectl")
-            ?? Tools.path("palimpsest-ink") ?? Tools.path("palimpsestctl") ?? raw
+        return Tools.path("scribble") ?? Tools.path("scribblectl") ?? raw
     }
 
     static func send(command: String) -> String {
@@ -144,34 +143,34 @@ struct PalimpsestLinuxApp {
 
     private static let usage = """
     usage:
-      scribbleeverywhere daemon             overlay daemon (Hyprland / Wayland)
-      scribbleeverywhere version            print the version
-      scribbleeverywhere toggle             start annotating, or deliver and stop
-      scribbleeverywhere copy               copy the annotated window
-      scribbleeverywhere paste              copy and paste into the saved window
-      scribbleeverywhere save               save PNG to the annotations folder
-      scribbleeverywhere undo | clear       edit strokes while annotating
-      scribbleeverywhere colour [index]     cycle, or select a palette colour
-      scribbleeverywhere colour-add [hex]   add a colour; hex may be #RRGGBB from hyprpicker
-      scribbleeverywhere colour-remove N    remove a palette colour
-      scribbleeverywhere colour-name N NAME set or clear a colour name
-      scribbleeverywhere colour-replace N HEX
-      scribbleeverywhere action [clipboard|copy-and-paste]
-      scribbleeverywhere paper-tone [on|off]
-      scribbleeverywhere save-annotations [on|off]
-      scribbleeverywhere history            count and folder
-      scribbleeverywhere history-open [path]
-      scribbleeverywhere folder [PATH]      get or set the annotations folder
-      scribbleeverywhere autostart [on|off]
-      scribbleeverywhere pen-mouse          report Hyprland-managed idle pen behavior
-      scribbleeverywhere permissions        grim, wl-copy, wtype, hyprctl, stylus
-      scribbleeverywhere paste-target previous|frontmost|pin ADDRESS [name]
-      scribbleeverywhere palette-position none|top-left|top-right
-      scribbleeverywhere hotkey             documented Hyprland chord (Super+Alt+D)
-      scribbleeverywhere menu               JSON for the bar popup
-      scribbleeverywhere cancel             stop without copying
-      scribbleeverywhere status [--waybar]  daemon state (waybar JSON with --waybar)
-      scribbleeverywhere quit               stop the daemon
+      scribble daemon             overlay daemon (Hyprland / Wayland)
+      scribble version            print the version
+      scribble toggle             start annotating, or deliver and stop
+      scribble copy               copy the annotated window
+      scribble paste              copy and paste into the saved window
+      scribble save               save PNG to the annotations folder
+      scribble undo | clear       edit strokes while annotating
+      scribble colour [index]     cycle, or select a palette colour
+      scribble colour-add [hex]   add a colour; hex may be #RRGGBB from hyprpicker
+      scribble colour-remove N    remove a palette colour
+      scribble colour-name N NAME set or clear a colour name
+      scribble colour-replace N HEX
+      scribble action [clipboard|copy-and-paste]
+      scribble paper-tone [on|off]
+      scribble save-annotations [on|off]
+      scribble history            count and folder
+      scribble history-open [path]
+      scribble folder [PATH]      get or set the annotations folder
+      scribble autostart [on|off]
+      scribble pen-mouse          report Hyprland-managed idle pen behavior
+      scribble permissions        grim, wl-copy, wtype, hyprctl, stylus
+      scribble paste-target previous|frontmost|pin ADDRESS [name]
+      scribble palette-position none|top-left|top-right
+      scribble hotkey             documented Hyprland chord (Super+Alt+D)
+      scribble menu               JSON for the bar popup
+      scribble cancel             stop without copying
+      scribble status [--waybar]  daemon state (waybar JSON with --waybar)
+      scribble quit               stop the daemon
 
     Default Hyprland hotkey: Super+Alt+D. colour-add hex may be #RRGGBB from
     hyprpicker (next unused preset if omitted). folder PATH sets the
@@ -195,11 +194,11 @@ enum LinuxSelfTest {
             return failures
         }
 
-        let path = FileManager.default.temporaryDirectory.appendingPathComponent("palimpsest-self-test-\(UUID().uuidString).png").path
+        let path = FileManager.default.temporaryDirectory.appendingPathComponent("scribble-self-test-\(UUID().uuidString).png").path
         defer { try? FileManager.default.removeItem(atPath: path) }
         let red = ImageBuffer(width: 1, height: 1, pixels: [255, 0, 0, 255])
         let wrote = red.withRawBytes { pointer in
-            palimpsest_write_png_rgba(path, 1, 1, 4, pointer.assumingMemoryBound(to: UInt8.self)) == 0
+            scribble_write_png_rgba(path, 1, 1, 4, pointer.assumingMemoryBound(to: UInt8.self)) == 0
         }
         let header = (try? Data(contentsOf: URL(fileURLWithPath: path)))?.prefix(8)
         let pngSignature: [UInt8] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
@@ -207,12 +206,12 @@ enum LinuxSelfTest {
             failures.append("PNG writer did not produce a PNG signature")
         }
 
-        let json = PalimpsestLinuxApp.waybarJSON(reply: "annotating=true strokes=1 ink=#FF3B30FF")
+        let json = ScribbleEverywhereLinuxApp.waybarJSON(reply: "annotating=true strokes=1 ink=#FF3B30FF")
         if !json.contains("\"class\":\"active\"") || !json.contains("#FF3B30FF") {
             failures.append("waybar JSON missing active state: \(json)")
         }
 
-        var overlay = palimpsest_output_info()
+        var overlay = scribble_output_info()
         overlay.logical_width = 800
         overlay.logical_height = 600
         overlay.buffer_width = 800

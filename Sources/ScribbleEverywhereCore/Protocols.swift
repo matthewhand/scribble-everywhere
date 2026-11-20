@@ -1,7 +1,7 @@
 import Foundation
 
-/// Platform seams. `PalimpsestCore` defines what each shell must provide; the
-/// macOS shell (`PalimpsestInk`) implements them with AppKit/ScreenCaptureKit/
+/// Platform seams. `ScribbleEverywhereCore` defines what each shell must provide; the
+/// macOS shell (`ScribbleEverywhere`) implements them with AppKit/ScreenCaptureKit/
 /// Carbon. Windows and Linux shells would implement the same protocols.
 
 /// Owns the transparent annotation layer for one display. UI work, so main

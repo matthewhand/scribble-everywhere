@@ -17,11 +17,11 @@ enum WinValidationCanvas {
         wc.hInstance = GetModuleHandleW(nil)
         wc.hbrBackground = GetSysColorBrush(Int32(COLOR_WINDOW))
         wc.hCursor = LoadCursorW(nil, UnsafePointer(bitPattern: 32512))
-        "PalimpsestValidationCanvas".wide.withUnsafeBufferPointer {
+        "ScribbleEverywhereValidationCanvas".wide.withUnsafeBufferPointer {
             wc.lpszClassName = $0.baseAddress
             _ = RegisterClassExW(&wc)
         }
-        hwnd = CreateWindowExW(0, "PalimpsestValidationCanvas".wide,
+        hwnd = CreateWindowExW(0, "ScribbleEverywhereValidationCanvas".wide,
             "ScribbleEverywhere — Paste check".wide, DWORD(WS_OVERLAPPEDWINDOW) | DWORD(WS_CLIPCHILDREN),
             200, 150, 1200, 900, nil, nil, GetModuleHandleW(nil), nil)
         guard let hwnd else { return }

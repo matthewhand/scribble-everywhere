@@ -1,6 +1,6 @@
 import Foundation
-import PalimpsestCore
-import CPalimpsestLinux
+import ScribbleEverywhereCore
+import CScribbleEverywhereLinux
 
 /// PNG annotation archive, matching macOS `AnnotationHistory` without AppKit.
 struct LinuxHistory {
@@ -8,7 +8,7 @@ struct LinuxHistory {
 
     static var defaultFolder: String {
         let base = env("XDG_DATA_HOME") ?? "\(env("HOME") ?? ".")/.local/share"
-        return "\(base)/palimpsest-ink/annotations"
+        return "\(base)/scribble/annotations"
     }
 
     struct Entry {
@@ -32,7 +32,7 @@ struct LinuxHistory {
         let stamp = formatter.string(from: date).replacingOccurrences(of: ":", with: "-")
         let path = "\(folder)/Annotation \(stamp) \(UUID().uuidString).png"
         let wrote = image.withRawBytes { pointer in
-            palimpsest_write_png_rgba(
+            scribble_write_png_rgba(
                 path,
                 Int32(image.width),
                 Int32(image.height),
@@ -80,7 +80,7 @@ struct LinuxHistory {
 enum LinuxAutostart {
     static func desktopPath() -> String {
         let base = env("XDG_CONFIG_HOME") ?? "\(env("HOME") ?? ".")/.config"
-        return "\(base)/autostart/palimpsest-ink.desktop"
+        return "\(base)/autostart/scribble.desktop"
     }
 
     static func isEnabled() -> Bool {
@@ -95,8 +95,8 @@ enum LinuxAutostart {
             do { try FileManager.default.removeItem(atPath: path); return true }
             catch { LinuxLog.log("Autostart removal failed: \(error)"); return false }
         }
-        let binary = binary ?? Tools.path("scribbleeverywhere") ?? Tools.path("palimpsest-ink")
-            ?? "\(env("HOME") ?? ".")/.local/bin/scribbleeverywhere"
+        let binary = binary ?? Tools.path("scribble")
+            ?? "\(env("HOME") ?? ".")/.local/bin/scribble"
         guard let body = desktopEntry(binary: binary) else { return false }
         do {
             try FileManager.default.createDirectory(

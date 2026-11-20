@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Creates a stable, self-signed code-signing identity ("Palimpsest Ink") so
+# Creates a stable, self-signed code-signing identity ("ScribbleEverywhere") so
 # macOS TCC keeps Screen Recording / Accessibility grants across rebuilds.
 #
 # Ad-hoc signing (-) produces a new cdhash on every build, and TCC keys
@@ -12,9 +12,9 @@
 #
 set -euo pipefail
 
-CN="Palimpsest Ink"
+CN="ScribbleEverywhere"
 DIR="$(cd "$(dirname "$0")/.." && pwd)/build/signing"
-VALID="$(security find-identity -v -p codesigning 2>/dev/null | grep -c "Palimpsest Ink" || true)"
+VALID="$(security find-identity -v -p codesigning 2>/dev/null | grep -c "ScribbleEverywhere" || true)"
 if [ "$VALID" -gt 0 ]; then
     echo "==> Identity \"$CN\" already exists"
     security find-identity -v -p codesigning | grep "$CN"
@@ -37,7 +37,7 @@ cat > codesign.ext <<'EOF'
 basicConstraints=critical,CA:FALSE
 keyUsage=critical,digitalSignature
 extendedKeyUsage=critical,codeSigning
-subjectAltName=DNS:dev.matthewhand.palimpsest
+subjectAltName=DNS:dev.matthewhand.scribbleeverywhere
 EOF
 
 openssl x509 -req -in signing.csr -CA ca.cer -CAkey ca.key -CAcreateserial \

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Assembles build/PalimpsestInk.app from the SwiftPM executable.
+# Assembles build/ScribbleEverywhere.app from the SwiftPM executable.
 #
 # Usage: scripts/make-app.sh [debug|release]   (default: release)
 #
@@ -10,15 +10,15 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CONFIG="${1:-release}"
 # Documents is synced by iCloud FileProvider, which re-stamps FinderInfo xattrs
 # codesign refuses to sign over. Stage the finished bundle outside the sync.
-STAGE="$HOME/Library/Application Support/PalimpsestInk"
-APP="$STAGE/PalimpsestInk.app"
-BUNDLE_ID="dev.matthewhand.palimpsest"
+STAGE="$HOME/Library/Application Support/ScribbleEverywhere"
+APP="$STAGE/ScribbleEverywhere.app"
+BUNDLE_ID="dev.matthewhand.scribbleeverywhere"
 
-echo "==> Building Palimpsest Ink ($CONFIG)"
+echo "==> Building ScribbleEverywhere ($CONFIG)"
 swift build -c "$CONFIG" --package-path "$ROOT"
 
 BIN_DIR="$(swift build -c "$CONFIG" --package-path "$ROOT" --show-bin-path)"
-BIN="$BIN_DIR/PalimpsestInk"
+BIN="$BIN_DIR/ScribbleEverywhere"
 if [ ! -x "$BIN" ]; then
     echo "error: built binary not found at $BIN" >&2
     exit 1
@@ -27,7 +27,7 @@ fi
 echo "==> Assembling $APP"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp "$BIN" "$APP/Contents/MacOS/PalimpsestInk"
+cp "$BIN" "$APP/Contents/MacOS/ScribbleEverywhere"
 cp "$ROOT/Info.plist" "$APP/Contents/Info.plist"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 
@@ -37,7 +37,7 @@ xattr -cr "$APP" 2>/dev/null || true
 # Prefer the stable local identity: TCC keeps its grants across rebuilds.
 # Ad-hoc (-) changes the cdhash every build and silently voids granted
 # permissions (scripts/make-signing-cert.sh creates the identity once).
-IDENTITY="Palimpsest Ink"
+IDENTITY="ScribbleEverywhere"
 if security find-identity -v -p codesigning 2>/dev/null | grep -q "$IDENTITY"; then
     codesign --force --sign "$IDENTITY" --identifier "$BUNDLE_ID" "$APP" >/dev/null 2>&1
 else

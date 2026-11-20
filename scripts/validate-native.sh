@@ -14,9 +14,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "$(uname -s)" in
-  Darwin) product=PalimpsestInk; suite=PalimpsestMacTests ;;
+  Darwin) product=ScribbleEverywhere; suite=ScribbleEverywhereMacTests ;;
   Linux)
-    product=palimpsest-ink; suite=PalimpsestLinuxTests
+    product=scribble; suite=ScribbleEverywhereLinuxTests
     bash scripts/gen-wayland-protocols.sh ;;
   *) echo "Use scripts/build-windows.ps1 -RunTests on Windows." >&2; exit 2 ;;
 esac
@@ -25,14 +25,14 @@ test_command=(swift test)
 test_help=$(swift test --help)
 if [[ "$test_help" == *--build-system* ]]; then test_command+=(--build-system native); fi
 tests=$("${test_command[@]}" "${extra[@]}" --jobs 2 -c release list)
-if ! grep -q 'PalimpsestCoreTests\.' <<< "$tests" || ! grep -q "$suite\." <<< "$tests"; then
+if ! grep -q 'ScribbleEverywhereCoreTests\.' <<< "$tests" || ! grep -q "$suite\." <<< "$tests"; then
   echo "Test discovery must find both Core and $suite cases." >&2
   exit 1
 fi
 printf '%s\n' "$tests"
 "${test_command[@]}" "${extra[@]}" --jobs 2 -c release
 swift build "${extra[@]}" --jobs 2 -c release --product "$product"
-if [[ "$product" == palimpsest-ink ]]; then
+if [[ "$product" == scribble ]]; then
   bin_dir=$(swift build "${extra[@]}" -c release --show-bin-path)
-  "$bin_dir/palimpsest-ink" self-test
+  "$bin_dir/scribble" self-test
 fi

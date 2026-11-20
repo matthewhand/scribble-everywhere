@@ -2,7 +2,7 @@ import Foundation
 import CoreGraphics
 import ImageIO
 import UniformTypeIdentifiers
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 extension ImageBuffer {
     /// Decodes a `CGImage` into an RGBA8 buffer (top-left origin).

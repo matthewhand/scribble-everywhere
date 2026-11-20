@@ -1,7 +1,7 @@
 import Testing
 import WinSDK
-import PalimpsestCore
-@testable import PalimpsestWin
+import ScribbleEverywhereCore
+@testable import ScribbleEverywhereWin
 
 /// These exercise the production contact transitions, not a physical digitizer.
 @Suite("Windows pointer contacts", .serialized)

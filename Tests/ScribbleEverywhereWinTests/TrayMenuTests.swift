@@ -1,7 +1,7 @@
 import Testing
 import WinSDK
-import PalimpsestCore
-@testable import PalimpsestWin
+import ScribbleEverywhereCore
+@testable import ScribbleEverywhereWin
 
 /// Native menu/GDI checks. These do not replace interactive submenu selection
 /// or real pen/touch tests. They require Windows and its Swift toolchain.

@@ -1,15 +1,15 @@
 import AppKit
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 /// The drawing surface. It renders from a `StrokeCanvas`, so stroke storage,
-/// undo and pressure rules all live in `PalimpsestCore` and are unit tested.
+/// undo and pressure rules all live in `ScribbleEverywhereCore` and are unit tested.
 ///
 /// Pen input on macOS with `waltopd` arrives as `tabletPoint`/`tabletProximity`
 /// events only — no mouse events — so the pen is drawn here. A plain mouse is
 /// drawn through the mouse handlers. While a pen is in proximity the mouse
 /// handlers are ignored, which also de-duplicates the case where a native tablet
 /// driver delivers both kinds of event.
-final class InkLayerView: NSView, PalimpsestCore.PenInputSource {
+final class InkLayerView: NSView, ScribbleEverywhereCore.PenInputSource {
     let canvas: StrokeCanvas
 
     var onStrokeChanged: (() -> Void)?

@@ -1,5 +1,5 @@
 import AppKit
-import PalimpsestCore
+import ScribbleEverywhereCore
 import CoreGraphics
 
 struct WindowTarget {

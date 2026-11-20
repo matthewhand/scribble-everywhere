@@ -1,6 +1,6 @@
 import AppKit
 import SwiftUI
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 @MainActor
 final class FloatingPaletteController {

@@ -18,7 +18,7 @@ enum WinPenShortcut {
         let fromStartup = tail.contains("/startup") || tail.contains("--startup")
         let settings = tail.contains("/settings") || tail.contains("--settings")
         let fromPen = !fromStartup && !settings
-        let name = "Local\\PalimpsestInk".wide
+        let name = "Local\\ScribbleEverywhere".wide
         instanceMutex = name.withUnsafeBufferPointer { raw in
             CreateMutexW(nil, false, raw.baseAddress)
         }
@@ -51,7 +51,7 @@ enum WinPenShortcut {
                 let hwnd = HWND(bitPattern: Int(bitPattern: bits))
                 var className = [WCHAR](repeating: 0, count: 128)
                 if GetClassNameW(hwnd, &className, Int32(className.count)) > 0,
-                   className.string == "PalimpsestTrayWindow" {
+                   className.string == "ScribbleEverywhereTrayWindow" {
                     return PostMessageW(hwnd, message, parameter, 0)
                 }
             }

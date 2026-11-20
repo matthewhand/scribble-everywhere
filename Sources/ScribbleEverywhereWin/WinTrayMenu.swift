@@ -1,6 +1,6 @@
 import Foundation
 import WinSDK
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 // oleacc.h's MSAAMENUINFO is not re-exported by Swift's WinSDK. This frozen
 // layout matches its two DWORDs followed by LPWSTR (verified by native tests).

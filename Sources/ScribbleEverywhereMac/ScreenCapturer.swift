@@ -1,7 +1,7 @@
 import Foundation
 import CoreGraphics
 import ScreenCaptureKit
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 struct ScreenCapturerError: LocalizedError {
     var message: String
@@ -14,7 +14,7 @@ struct ScreenCapturerError: LocalizedError {
 /// capture or the ink would be baked in *and* then composited again by
 /// `BufferInkCompositor` (double ink). We exclude every window owned by this
 /// process and composite the ink ourselves.
-final class ScreenCapturer: PalimpsestCore.ScreenCapturer {
+final class ScreenCapturer: ScribbleEverywhereCore.ScreenCapturer {
     private let log: (String) -> Void
 
     init(log: @escaping (String) -> Void = { Diagnostics.log($0) }) {

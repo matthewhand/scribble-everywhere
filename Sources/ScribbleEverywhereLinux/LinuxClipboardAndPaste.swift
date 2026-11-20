@@ -1,7 +1,7 @@
 ﻿import Foundation
 import Glibc
-import PalimpsestCore
-import CPalimpsestLinux
+import ScribbleEverywhereCore
+import CScribbleEverywhereLinux
 
 /// wl-copy's parent exits successfully once its background selection owner is
 /// ready. A failed or timed-out write must never be followed by a stale paste.
@@ -23,7 +23,7 @@ final class LinuxClipboard: ClipboardWriter {
             return false
         }
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("palimpsest-clipboard-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("scribble-clipboard-\(UUID().uuidString)", isDirectory: true)
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true,
                 attributes: [.posixPermissions: 0o700])
@@ -33,7 +33,7 @@ final class LinuxClipboard: ClipboardWriter {
                 try png.write(to: imageURL)
             } else {
                 let wrote = image.withRawBytes { pointer in
-                    palimpsest_write_png_rgba(imageURL.path, Int32(image.width), Int32(image.height),
+                    scribble_write_png_rgba(imageURL.path, Int32(image.width), Int32(image.height),
                         Int32(image.width * 4), pointer.assumingMemoryBound(to: UInt8.self)) == 0
                 }
                 guard wrote else { return false }

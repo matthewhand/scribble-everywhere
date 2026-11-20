@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
-# Builds the Windows shell of ScribbleEverywhere and copies PalimpsestWin.exe to
-# %LOCALAPPDATA%\PalimpsestInk\.
+# Builds the Windows shell of ScribbleEverywhere and copies ScribbleEverywhereWin.exe to
+# %LOCALAPPDATA%\ScribbleEverywhere\.
 #
 # Needs Swift 6.x for Windows and Visual Studio 2022 Build Tools with the
 # "Desktop development with C++" workload. The script locates both: it puts
@@ -12,8 +12,7 @@
 
 param(
     [switch]$RunTests,
-    [switch]$NoInstall,
-    [switch]$Portable
+    [switch]$NoInstall
 )
 
 $ErrorActionPreference = "Stop"
@@ -98,8 +97,8 @@ if ($RunTests) {
     # here. Use the native backend until its DLL discovery is working.
     $discoveredTests = @(swift test --build-system native -c release list)
     if ($LASTEXITCODE -ne 0) { throw "Test discovery failed (exit $LASTEXITCODE)" }
-    $coreTests = @($discoveredTests | Where-Object { $_ -match '^PalimpsestCoreTests\..+/' })
-    $windowsTests = @($discoveredTests | Where-Object { $_ -match '^PalimpsestWinTests\..+/' })
+    $coreTests = @($discoveredTests | Where-Object { $_ -match '^ScribbleEverywhereCoreTests\..+/' })
+    $windowsTests = @($discoveredTests | Where-Object { $_ -match '^ScribbleEverywhereWinTests\..+/' })
     if ($coreTests.Count -eq 0 -or $windowsTests.Count -eq 0) {
         throw "Test discovery must find both Core and Windows tests; refusing a zero-test success."
     }
@@ -110,15 +109,15 @@ if ($RunTests) {
 
 # Apply GUI startup flags only to this executable build, never to test DLLs.
 # Build after testing so the installed artifact always has the GUI subsystem.
-swift build -c release --product PalimpsestWin -Xlinker /SUBSYSTEM:WINDOWS -Xlinker /ENTRY:mainCRTStartup
+swift build -c release --product ScribbleEverywhereWin -Xlinker /SUBSYSTEM:WINDOWS -Xlinker /ENTRY:mainCRTStartup
 if ($LASTEXITCODE -ne 0) { throw "swift build failed (exit $LASTEXITCODE)" }
 
 # Testing and GUI builds may use different backends. Ask the GUI build backend
 # for its output rather than installing a stale executable from another backend.
 $binDirectory = & swift build -c release --show-bin-path
 if ($LASTEXITCODE -ne 0) { throw "Could not resolve the GUI build output" }
-$bin = Join-Path ($binDirectory | Select-Object -Last 1) "PalimpsestWin.exe"
-if (-not (Test-Path -LiteralPath $bin)) { throw "Build produced no PalimpsestWin.exe at $bin" }
+$bin = Join-Path ($binDirectory | Select-Object -Last 1) "ScribbleEverywhereWin.exe"
+if (-not (Test-Path -LiteralPath $bin)) { throw "Build produced no ScribbleEverywhereWin.exe at $bin" }
 
 # Verify the artifact itself, including when tests also produced a console exe.
 $exeBytes = [IO.File]::ReadAllBytes((Resolve-Path -LiteralPath $bin))
@@ -130,6 +129,14 @@ if ($peOffset -lt 0 -or $peOffset + 94 -gt $exeBytes.Length -or
     throw "Build output does not have the Windows GUI subsystem; refusing to install it."
 }
 Write-Host "Verified GUI executable: $bin"
+if ($NoInstall) {
+    Write-Host "Build complete; installation skipped."
+    return
+}
+
+$dest = Join-Path $env:LOCALAPPDATA "ScribbleEverywhere"
+New-Item -ItemType Directory -Force -Path $dest | Out-Null
+
 function Copy-RuntimeClosure([string]$exePath, [string]$runtimeBin, [string]$destDir) {
     $dumpbin = Get-Command dumpbin.exe -ErrorAction SilentlyContinue
     if (-not $dumpbin) {
@@ -175,33 +182,8 @@ function Copy-RuntimeClosure([string]$exePath, [string]$runtimeBin, [string]$des
     Write-Host "Copied $copied Swift runtime DLLs to $destDir"
 }
 
-if ($Portable) {
-    if (-not $script:swiftRuntimeBin -or -not (Get-Command dumpbin.exe -ErrorAction SilentlyContinue)) {
-        throw "A Swift runtime directory and dumpbin.exe are required to package the portable archive."
-    }
-    $stage = Join-Path (Join-Path $PSScriptRoot '..\.build\portable') ([Guid]::NewGuid().ToString())
-    $artifacts = Join-Path $PSScriptRoot '..\.build\artifacts'
-    New-Item -ItemType Directory -Force -Path $stage, $artifacts | Out-Null
-    Copy-Item -LiteralPath $bin -Destination (Join-Path $stage 'ScribbleEverywhere.exe')
-    Copy-RuntimeClosure (Resolve-Path $bin) $script:swiftRuntimeBin $stage
-    Copy-Item -LiteralPath (Join-Path $PSScriptRoot '..\LICENSE') -Destination $stage
-    $archive = Join-Path $artifacts 'ScribbleEverywhere-windows-x64-portable.zip'
-    Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $archive -Force
-    Write-Host "Portable archive: $archive"
-    Write-Host "The app stores settings and annotation history in the user profile."
-    return
-}
-
-if ($NoInstall) {
-    Write-Host "Build complete; installation skipped."
-    return
-}
-
-$dest = Join-Path $env:LOCALAPPDATA "PalimpsestInk"
-New-Item -ItemType Directory -Force -Path $dest | Out-Null
-
 # The running app locks swiftCore.dll, so replace the install only after it exits.
-Get-Process PalimpsestWin, ScribbleEverywhere -ErrorAction SilentlyContinue | Stop-Process -Force
+Get-Process ScribbleEverywhereWin -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Sleep -Milliseconds 400
 
 if ($script:swiftRuntimeBin) {
@@ -210,21 +192,18 @@ if ($script:swiftRuntimeBin) {
     Write-Warning "Swift runtime directory not found; DLLs were not copied beside the exe."
 }
 
-$installedExe = Join-Path $dest "ScribbleEverywhere.exe"
+$installedExe = Join-Path $dest "ScribbleEverywhereWin.exe"
 try {
     Copy-Item $bin $installedExe -Force -ErrorAction Stop
 } catch {
-    Get-Process PalimpsestWin, ScribbleEverywhere -ErrorAction SilentlyContinue | Stop-Process -Force
+    Get-Process ScribbleEverywhereWin -ErrorAction SilentlyContinue | Stop-Process -Force
     Start-Sleep -Milliseconds 400
     Copy-Item $bin $installedExe -Force
 }
 
-# Keep existing startup shortcuts and pen-service integrations functional.
-Copy-Item $bin (Join-Path $dest 'PalimpsestWin.exe') -Force -ErrorAction Stop
-
 Write-Host "Installed: $installedExe"
 Write-Host "Launch it from a shortcut in shell:startup for autostart:"
-Write-Host "  $dest\ScribbleEverywhere.exe"
+Write-Host "  $dest\ScribbleEverywhereWin.exe"
 Write-Host ""
 Write-Host "First run: left-click the tray icon (or Ctrl+Alt+D) toggles annotation."
 Write-Host "Right-click opens the menu: ink colour, and which window to paste into."

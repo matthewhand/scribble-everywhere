@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# Keeps the version in one place. PalimpsestCore/PalimpsestCore/Version.swift is
+# Keeps the version in one place. ScribbleEverywhereCore/ScribbleEverywhereCore/Version.swift is
 # the source of truth; Info.plist must agree with it, or a macOS build reports a
-# different version from `palimpsestctl version`.
+# different version from `scribblectl version`.
 #
 set -euo pipefail
 

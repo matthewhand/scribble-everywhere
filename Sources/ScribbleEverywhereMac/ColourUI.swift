@@ -1,6 +1,6 @@
 import AppKit
 import SwiftUI
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 /// Human-readable names for the built-in colours, falling back to hex for
 /// custom ones. Used by the HUD and the menus.

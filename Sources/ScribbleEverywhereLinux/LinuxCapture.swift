@@ -1,7 +1,7 @@
 import Foundation
 import Glibc
-import PalimpsestCore
-import CPalimpsestLinux
+import ScribbleEverywhereCore
+import CScribbleEverywhereLinux
 
 /// Runs an external tool (grim, wl-copy, wtype, hyprctl) and returns stdout.
 enum Shell {
@@ -13,7 +13,7 @@ enum Shell {
         var argv = strings + [nil]
         var pid: Int32 = 0, outFD: Int32 = -1, errFD: Int32 = -1
         let launched = argv.withUnsafeMutableBufferPointer {
-            palimpsest_process_spawn(command, $0.baseAddress, &pid, &outFD, &errFD)
+            scribble_process_spawn(command, $0.baseAddress, &pid, &outFD, &errFD)
         }
         guard launched == 0 else {
             LinuxLog.log("Could not run \(command)")
@@ -32,15 +32,15 @@ enum Shell {
         let deadline = ProcessInfo.processInfo.systemUptime + max(timeout, 0)
         while !reaped || descriptors.contains(where: { $0.fd >= 0 }) {
             if !reaped {
-                let state = palimpsest_process_poll(pid, &status)
+                let state = scribble_process_poll(pid, &status)
                 if state < 0 {
-                    palimpsest_process_terminate(pid, 0)
+                    scribble_process_terminate(pid, 0)
                     return (-1, Data(), Data())
                 }
                 reaped = state == 1
             }
             if ProcessInfo.processInfo.systemUptime >= deadline {
-                palimpsest_process_terminate(pid, reaped ? 0 : 1)
+                scribble_process_terminate(pid, reaped ? 0 : 1)
                 LinuxLog.log("\(command) timed out")
                 return (-1, Data(), Data())
             }

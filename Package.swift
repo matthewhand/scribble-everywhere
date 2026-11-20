@@ -2,22 +2,22 @@
 import PackageDescription
 
 let package = Package(
-    name: "palimpsest-ink",
+    name: "scribble-everywhere",
     platforms: [
         .macOS(.v14)
     ],
     products: {
         var products: [Product] = [
-            .library(name: "PalimpsestCore", targets: ["PalimpsestCore"])
+            .library(name: "ScribbleEverywhereCore", targets: ["ScribbleEverywhereCore"])
         ]
         #if os(macOS)
-        products.append(.executable(name: "PalimpsestInk", targets: ["PalimpsestInk"]))
+        products.append(.executable(name: "ScribbleEverywhere", targets: ["ScribbleEverywhere"]))
         #endif
         #if os(Windows)
-        products.append(.executable(name: "PalimpsestWin", targets: ["PalimpsestWin"]))
+        products.append(.executable(name: "ScribbleEverywhere", targets: ["ScribbleEverywhereWin"]))
         #endif
         #if os(Linux)
-        products.append(.executable(name: "palimpsest-ink", targets: ["PalimpsestLinux"]))
+        products.append(.executable(name: "scribble", targets: ["ScribbleEverywhereLinux"]))
         #endif
         return products
     }(),
@@ -26,7 +26,7 @@ let package = Package(
             // Portable: Foundation only, no AppKit/CoreGraphics. Builds on
             // macOS, Linux and Windows Swift toolchains.
             .target(
-                name: "PalimpsestCore",
+                name: "ScribbleEverywhereCore",
                 path: "Sources/ScribbleEverywhereCore"
             )
         ]
@@ -34,14 +34,14 @@ let package = Package(
         targets.append(
             // macOS shell: AppKit + ScreenCaptureKit + Carbon.
             .executableTarget(
-                name: "PalimpsestInk",
-                dependencies: ["PalimpsestCore"],
+                name: "ScribbleEverywhere",
+                dependencies: ["ScribbleEverywhereCore"],
                 path: "Sources/ScribbleEverywhereMac"
             )
         )
         targets.append(.testTarget(
-            name: "PalimpsestMacTests",
-            dependencies: ["PalimpsestInk", "PalimpsestCore"],
+            name: "ScribbleEverywhereMacTests",
+            dependencies: ["ScribbleEverywhere", "ScribbleEverywhereCore"],
             path: "Tests/ScribbleEverywhereMacTests"
         ))
         #endif
@@ -50,8 +50,8 @@ let package = Package(
             // Windows shell: systray applet, layered overlay, WM_POINTER pen
             // input (Surface Book built-in pen/touch), GDI capture, pure-Swift PNG.
             .executableTarget(
-                name: "PalimpsestWin",
-                dependencies: ["PalimpsestCore"],
+                name: "ScribbleEverywhereWin",
+                dependencies: ["ScribbleEverywhereCore"],
                 path: "Sources/ScribbleEverywhereWin",
                 linkerSettings: [
                     .linkedLibrary("user32"),
@@ -68,8 +68,8 @@ let package = Package(
         )
         targets.append(
             .testTarget(
-                name: "PalimpsestWinTests",
-                dependencies: ["PalimpsestWin", "PalimpsestCore"],
+                name: "ScribbleEverywhereWinTests",
+                dependencies: ["ScribbleEverywhereWin", "ScribbleEverywhereCore"],
                 path: "Tests/ScribbleEverywhereWinTests"
             )
         )
@@ -79,7 +79,7 @@ let package = Package(
             // C interop: wayland-scanner generated protocol code (run
             // scripts/gen-wayland-protocols.sh first) + libpng writer.
             .target(
-                name: "CPalimpsestLinux",
+                name: "CScribbleEverywhereLinux",
                 path: "Sources/CScribbleEverywhereLinux",
                 publicHeadersPath: "include",
                 cSettings: [
@@ -97,21 +97,21 @@ let package = Package(
         targets.append(
             // Linux shell: Hyprland/Wayland daemon + CLI + optional Omarchy applet.
             .executableTarget(
-                name: "PalimpsestLinux",
-                dependencies: ["PalimpsestCore", "CPalimpsestLinux"],
+                name: "ScribbleEverywhereLinux",
+                dependencies: ["ScribbleEverywhereCore", "CScribbleEverywhereLinux"],
                 path: "Sources/ScribbleEverywhereLinux"
             )
         )
         targets.append(.testTarget(
-            name: "PalimpsestLinuxTests",
-            dependencies: ["PalimpsestLinux", "PalimpsestCore", "CPalimpsestLinux"],
+            name: "ScribbleEverywhereLinuxTests",
+            dependencies: ["ScribbleEverywhereLinux", "ScribbleEverywhereCore", "CScribbleEverywhereLinux"],
             path: "Tests/ScribbleEverywhereLinuxTests"
         ))
         #endif
         targets.append(
             .testTarget(
-                name: "PalimpsestCoreTests",
-                dependencies: ["PalimpsestCore"],
+                name: "ScribbleEverywhereCoreTests",
+                dependencies: ["ScribbleEverywhereCore"],
                 path: "Tests/ScribbleEverywhereCoreTests"
             )
         )

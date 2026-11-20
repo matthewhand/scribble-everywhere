@@ -1,12 +1,12 @@
 import Foundation
 import WinSDK
-import PalimpsestCore
+import ScribbleEverywhereCore
 
 /// On-screen confirmation, matching the macOS HUD. A tray balloon
 /// (`NIF_INFO`) only lands in the Windows 11 notification center, so a stop
 /// looks silent. This window does not activate and does not take clicks.
 enum WinHUD {
-    static let className = "PalimpsestInkHUD"
+    static let className = "ScribbleEverywhereHUD"
     static let timerId: UINT_PTR = 42
 
     nonisolated(unsafe) private static var window: HWND?
